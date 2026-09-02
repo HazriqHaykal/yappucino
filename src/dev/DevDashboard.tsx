@@ -1,16 +1,30 @@
 // Throwaway test scaffolding — not part of the real room UI.
 // Delete this whole src/dev/ folder (and the ?dev=true branch in App.tsx)
 // once the real room is built; nothing else depends on it.
+import { useState } from "react";
 import GoogleCalendarSync from "../components/GoogleCalendarSync";
+import SpeechBubble from "../components/SpeechBubble";
 import TaskInputModal from "../components/TaskInputModal";
+import { runBurnoutCheck } from "../services/runBurnoutCheck";
 import { useTaskStore } from "../store/useTaskStore";
-import { CATEGORIES, CATEGORY_LABELS } from "../types/task";
+import { BurnoutCheckResult, CATEGORIES, CATEGORY_LABELS } from "../types/task";
 
 export default function DevDashboard() {
   const tasks = useTaskStore((state) => state.tasks);
   const openTaskModal = useTaskStore((state) => state.openTaskModal);
   const removeTask = useTaskStore((state) => state.removeTask);
   const clearTasks = useTaskStore((state) => state.clearTasks);
+
+  const [isCheckingBurnout, setIsCheckingBurnout] = useState(false);
+  const [burnoutResult, setBurnoutResult] = useState<BurnoutCheckResult | null>(null);
+
+  const handleTapBuddy = async () => {
+    setIsCheckingBurnout(true);
+    setBurnoutResult(null);
+    const result = await runBurnoutCheck();
+    setBurnoutResult(result);
+    setIsCheckingBurnout(false);
+  };
 
   return (
     <div style={{ maxWidth: 800, margin: "0 auto", padding: 24, fontFamily: "sans-serif" }}>
@@ -26,6 +40,45 @@ export default function DevDashboard() {
       </div>
 
       <GoogleCalendarSync />
+
+      <div style={{ marginBottom: 24, padding: 16, border: "1px solid #ccc", borderRadius: 8 }}>
+        <button
+          type="button"
+          onClick={handleTapBuddy}
+          disabled={isCheckingBurnout}
+          style={{ padding: "8px 16px", cursor: isCheckingBurnout ? "not-allowed" : "pointer" }}
+        >
+          {isCheckingBurnout ? "Checking in…" : "Tap Buddy"}
+        </button>
+
+        {(isCheckingBurnout || burnoutResult) && (
+          <div style={{ marginTop: 12 }}>
+            <SpeechBubble isLoading={isCheckingBurnout} text={burnoutResult?.reasoning ?? null} />
+          </div>
+        )}
+
+        {burnoutResult && !isCheckingBurnout && (
+          <div style={{ marginTop: 16, padding: 8, background: "#f5f5f5", fontSize: 12, fontFamily: "monospace" }}>
+            <div>overloadedCategory: {burnoutResult.overloadedCategory ?? "null"}</div>
+            <div>
+              urgentTaskIds ({burnoutResult.urgentTaskIds.length}):{" "}
+              {burnoutResult.urgentTaskIds.length === 0
+                ? "[]"
+                : burnoutResult.urgentTaskIds
+                    .map((id) => tasks.find((task) => task.id === id)?.title ?? `unknown:${id}`)
+                    .join(", ")}
+            </div>
+            <div>
+              nonUrgentTaskIds ({burnoutResult.nonUrgentTaskIds.length}):{" "}
+              {burnoutResult.nonUrgentTaskIds.length === 0
+                ? "[]"
+                : burnoutResult.nonUrgentTaskIds
+                    .map((id) => tasks.find((task) => task.id === id)?.title ?? `unknown:${id}`)
+                    .join(", ")}
+            </div>
+          </div>
+        )}
+      </div>
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
         {CATEGORIES.map((category) => (
