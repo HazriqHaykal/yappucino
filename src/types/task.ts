@@ -22,6 +22,13 @@ export interface SubStep {
   done: boolean;
 }
 
+export interface BurnoutCheckResult {
+  overloadedCategory: Category | null;
+  reasoning: string;
+  urgentTaskIds: string[];
+  nonUrgentTaskIds: string[];
+}
+
 export interface Task {
   id: string;
   userId: string;
