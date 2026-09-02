@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Category, Task } from "../types/task";
+import type { Category, SubStep, Task } from "../types/task";
 
 // No auth/backend yet — placeholder until Person A's identity slice lands.
 const LOCAL_USER_ID = "local-user";
@@ -33,6 +33,8 @@ interface TaskStore {
   /** Adds calendar events as tasks, skipping any whose externalId already
    * exists (re-sync dedupe). Returns the number of tasks actually added. */
   importCalendarTasks: (events: CalendarImportInput[]) => number;
+  setTaskSubSteps: (taskId: string, subSteps: SubStep[]) => void;
+  toggleSubStepDone: (taskId: string, subStepId: string) => void;
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -101,4 +103,25 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
 
     return newTasks.length;
   },
+
+  setTaskSubSteps: (taskId, subSteps) =>
+    set((state) => ({
+      tasks: state.tasks.map((task) =>
+        task.id === taskId ? { ...task, subSteps } : task,
+      ),
+    })),
+
+  toggleSubStepDone: (taskId, subStepId) =>
+    set((state) => ({
+      tasks: state.tasks.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              subSteps: task.subSteps?.map((step) =>
+                step.id === subStepId ? { ...step, done: !step.done } : step,
+              ),
+            }
+          : task,
+      ),
+    })),
 }));

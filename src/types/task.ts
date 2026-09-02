@@ -29,6 +29,12 @@ export interface BurnoutCheckResult {
   nonUrgentTaskIds: string[];
 }
 
+export interface StructureNudgeResult {
+  taskId: string;
+  subSteps: SubStep[];
+  reasoning: string;
+}
+
 export interface Task {
   id: string;
   userId: string;
