@@ -35,6 +35,9 @@ interface TaskStore {
   importCalendarTasks: (events: CalendarImportInput[]) => number;
   setTaskSubSteps: (taskId: string, subSteps: SubStep[]) => void;
   toggleSubStepDone: (taskId: string, subStepId: string) => void;
+  /** Increments deferCount and optionally moves dueAt out to deferUntil.
+   * Status stays "active" — deferring isn't completing or abandoning it. */
+  deferTask: (taskId: string, deferUntil?: string) => void;
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -120,6 +123,19 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
               subSteps: task.subSteps?.map((step) =>
                 step.id === subStepId ? { ...step, done: !step.done } : step,
               ),
+            }
+          : task,
+      ),
+    })),
+
+  deferTask: (taskId, deferUntil) =>
+    set((state) => ({
+      tasks: state.tasks.map((task) =>
+        task.id === taskId
+          ? {
+              ...task,
+              deferCount: task.deferCount + 1,
+              dueAt: deferUntil ?? task.dueAt,
             }
           : task,
       ),

@@ -35,6 +35,12 @@ export interface StructureNudgeResult {
   reasoning: string;
 }
 
+export interface RebalanceNudgeResult {
+  taskId: string;
+  reasoning: string;
+  suggestedDeferUntil?: string;
+}
+
 export interface Task {
   id: string;
   userId: string;
