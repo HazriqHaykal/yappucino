@@ -36,4 +36,5 @@ export interface Task {
   createdAt: string; // ISO timestamp
   dueAt?: string; // ISO timestamp
   completedAt?: string;
+  externalId?: string; // e.g. Google Calendar event ID, used to dedupe re-syncs
 }

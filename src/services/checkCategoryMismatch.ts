@@ -40,8 +40,12 @@ Rules:
 - When "likelyMismatch" is false, set "suggestedCategory" to null and
   "confirmMessage" to an empty string.`;
 
-const GEMINI_MODEL = "gemini-3.6-flash";
-const TIMEOUT_MS = 15000;
+// See the same constant in inferCalendarTaskAttributes.ts — gemini-3.6-flash's
+// mandatory hidden "thinking" made this take anywhere from ~2s to 23s+ for a
+// simple classification, regularly blowing through any reasonable timeout.
+// gemini-flash-lite-latest returns correct results in under 1.1s.
+const GEMINI_MODEL = "gemini-flash-lite-latest";
+const TIMEOUT_MS = 10000;
 
 /**
  * Returns null on any failure (missing key, network error, timeout,

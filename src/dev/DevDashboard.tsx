@@ -1,6 +1,7 @@
 // Throwaway test scaffolding — not part of the real room UI.
 // Delete this whole src/dev/ folder (and the ?dev=true branch in App.tsx)
 // once the real room is built; nothing else depends on it.
+import GoogleCalendarSync from "../components/GoogleCalendarSync";
 import TaskInputModal from "../components/TaskInputModal";
 import { useTaskStore } from "../store/useTaskStore";
 import { CATEGORIES, CATEGORY_LABELS } from "../types/task";
@@ -23,6 +24,8 @@ export default function DevDashboard() {
           Clear all tasks
         </button>
       </div>
+
+      <GoogleCalendarSync />
 
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 12, marginBottom: 24 }}>
         {CATEGORIES.map((category) => (
