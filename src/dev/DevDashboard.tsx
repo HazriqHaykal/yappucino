@@ -1,22 +1,36 @@
 // Throwaway test scaffolding — not part of the real room UI.
 // Delete this whole src/dev/ folder (and the ?dev=true branch in App.tsx)
 // once the real room is built; nothing else depends on it.
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import GoogleCalendarSync from "../components/GoogleCalendarSync";
 import SpeechBubble from "../components/SpeechBubble";
+import StickyNote from "../components/StickyNote";
 import TaskInputModal from "../components/TaskInputModal";
 import { runBurnoutCheck } from "../services/runBurnoutCheck";
+import { runStructureNudge } from "../services/runStructureNudge";
 import { useTaskStore } from "../store/useTaskStore";
 import { BurnoutCheckResult, CATEGORIES, CATEGORY_LABELS } from "../types/task";
+
+const STICKY_ROTATIONS = [-3, 2, -2, 3, -1.5];
+const STICKY_COLORS: ("yellow" | "lavender")[] = ["yellow", "lavender"];
+
+interface NudgeState {
+  isLoading: boolean;
+  reasoning: string | null;
+  error: string | null;
+}
 
 export default function DevDashboard() {
   const tasks = useTaskStore((state) => state.tasks);
   const openTaskModal = useTaskStore((state) => state.openTaskModal);
   const removeTask = useTaskStore((state) => state.removeTask);
   const clearTasks = useTaskStore((state) => state.clearTasks);
+  const toggleSubStepDone = useTaskStore((state) => state.toggleSubStepDone);
 
   const [isCheckingBurnout, setIsCheckingBurnout] = useState(false);
   const [burnoutResult, setBurnoutResult] = useState<BurnoutCheckResult | null>(null);
+
+  const [nudgeState, setNudgeState] = useState<Record<string, NudgeState>>({});
 
   const handleTapBuddy = async () => {
     setIsCheckingBurnout(true);
@@ -24,6 +38,24 @@ export default function DevDashboard() {
     const result = await runBurnoutCheck();
     setBurnoutResult(result);
     setIsCheckingBurnout(false);
+  };
+
+  const handleBreakDown = async (taskId: string) => {
+    setNudgeState((prev) => ({
+      ...prev,
+      [taskId]: { isLoading: true, reasoning: null, error: null },
+    }));
+    const result = await runStructureNudge(taskId);
+    setNudgeState((prev) => ({
+      ...prev,
+      [taskId]: {
+        isLoading: false,
+        reasoning: result?.reasoning ?? null,
+        error: result
+          ? null
+          : "Couldn't break this down right now, try again in a bit.",
+      },
+    }));
   };
 
   return (
@@ -115,22 +147,70 @@ export default function DevDashboard() {
                   </tr>
                 </thead>
                 <tbody>
-                  {categoryTasks.map((task) => (
-                    <tr key={task.id} style={{ borderBottom: "1px solid #eee" }}>
-                      <td style={{ padding: "4px 6px" }}>{task.title}</td>
-                      <td style={{ padding: "4px 6px" }}>{task.priority}</td>
-                      <td style={{ padding: "4px 6px" }}>{task.load}</td>
-                      <td style={{ padding: "4px 6px" }}>{task.status}</td>
-                      <td style={{ padding: "4px 6px" }}>
-                        {task.dueAt ? new Date(task.dueAt).toLocaleString() : "—"}
-                      </td>
-                      <td style={{ padding: "4px 6px" }}>
-                        <button type="button" onClick={() => removeTask(task.id)} style={{ fontSize: 12 }}>
-                          Remove
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {categoryTasks.map((task) => {
+                    const nudge = nudgeState[task.id];
+                    return (
+                      <Fragment key={task.id}>
+                        <tr style={{ borderBottom: "1px solid #eee" }}>
+                          <td style={{ padding: "4px 6px" }}>{task.title}</td>
+                          <td style={{ padding: "4px 6px" }}>{task.priority}</td>
+                          <td style={{ padding: "4px 6px" }}>{task.load}</td>
+                          <td style={{ padding: "4px 6px" }}>{task.status}</td>
+                          <td style={{ padding: "4px 6px" }}>
+                            {task.dueAt ? new Date(task.dueAt).toLocaleString() : "—"}
+                          </td>
+                          <td style={{ padding: "4px 6px", whiteSpace: "nowrap" }}>
+                            <button type="button" onClick={() => removeTask(task.id)} style={{ fontSize: 12 }}>
+                              Remove
+                            </button>
+                            {task.priority === "urgent" && (
+                              <button
+                                type="button"
+                                onClick={() => handleBreakDown(task.id)}
+                                disabled={nudge?.isLoading}
+                                style={{ fontSize: 12, marginLeft: 6 }}
+                              >
+                                {nudge?.isLoading ? "Breaking down…" : "Break this down"}
+                              </button>
+                            )}
+                          </td>
+                        </tr>
+                        {(nudge?.isLoading || nudge?.error || (task.subSteps && task.subSteps.length > 0)) && (
+                          <tr>
+                            <td colSpan={6} style={{ padding: "8px 6px", background: "#fafafa" }}>
+                              {nudge?.isLoading && (
+                                <span style={{ fontSize: 12, color: "#888" }}>Breaking down…</span>
+                              )}
+                              {nudge?.error && (
+                                <span style={{ fontSize: 12, color: "#c33" }}>{nudge.error}</span>
+                              )}
+                              {!nudge?.isLoading && task.subSteps && task.subSteps.length > 0 && (
+                                <div>
+                                  {nudge?.reasoning && (
+                                    <p style={{ fontSize: 12, color: "#666", margin: "0 0 8px" }}>
+                                      {nudge.reasoning}
+                                    </p>
+                                  )}
+                                  <div style={{ display: "flex", flexWrap: "wrap", gap: 12 }}>
+                                    {task.subSteps.map((step, i) => (
+                                      <StickyNote
+                                        key={step.id}
+                                        text={step.text}
+                                        done={step.done}
+                                        onToggle={() => toggleSubStepDone(task.id, step.id)}
+                                        rotationDeg={STICKY_ROTATIONS[i % STICKY_ROTATIONS.length]}
+                                        color={STICKY_COLORS[i % STICKY_COLORS.length]}
+                                      />
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
+                    );
+                  })}
                 </tbody>
               </table>
             )}
