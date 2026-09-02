@@ -7,16 +7,29 @@ import SpeechBubble from "../components/SpeechBubble";
 import StickyNote from "../components/StickyNote";
 import TaskInputModal from "../components/TaskInputModal";
 import { runBurnoutCheck } from "../services/runBurnoutCheck";
+import { runRebalanceNudge } from "../services/runRebalanceNudge";
 import { runStructureNudge } from "../services/runStructureNudge";
 import { useTaskStore } from "../store/useTaskStore";
-import { BurnoutCheckResult, CATEGORIES, CATEGORY_LABELS } from "../types/task";
+import {
+  BurnoutCheckResult,
+  CATEGORIES,
+  CATEGORY_LABELS,
+  RebalanceNudgeResult,
+} from "../types/task";
 
 const STICKY_ROTATIONS = [-3, 2, -2, 3, -1.5];
 const STICKY_COLORS: ("yellow" | "lavender")[] = ["yellow", "lavender"];
+const DRAWER_ANIMATION_MS = 400;
 
 interface NudgeState {
   isLoading: boolean;
   reasoning: string | null;
+  error: string | null;
+}
+
+interface RebalanceState {
+  isLoading: boolean;
+  result: RebalanceNudgeResult | null;
   error: string | null;
 }
 
@@ -26,11 +39,16 @@ export default function DevDashboard() {
   const removeTask = useTaskStore((state) => state.removeTask);
   const clearTasks = useTaskStore((state) => state.clearTasks);
   const toggleSubStepDone = useTaskStore((state) => state.toggleSubStepDone);
+  const deferTask = useTaskStore((state) => state.deferTask);
 
   const [isCheckingBurnout, setIsCheckingBurnout] = useState(false);
   const [burnoutResult, setBurnoutResult] = useState<BurnoutCheckResult | null>(null);
 
   const [nudgeState, setNudgeState] = useState<Record<string, NudgeState>>({});
+
+  const [rebalanceState, setRebalanceState] = useState<Record<string, RebalanceState>>({});
+  const [exitingTaskIds, setExitingTaskIds] = useState<Set<string>>(new Set());
+  const [hiddenTaskIds, setHiddenTaskIds] = useState<Set<string>>(new Set());
 
   const handleTapBuddy = async () => {
     setIsCheckingBurnout(true);
@@ -56,6 +74,55 @@ export default function DevDashboard() {
           : "Couldn't break this down right now, try again in a bit.",
       },
     }));
+  };
+
+  const handleRebalance = async (taskId: string) => {
+    setRebalanceState((prev) => ({
+      ...prev,
+      [taskId]: { isLoading: true, result: null, error: null },
+    }));
+    const result = await runRebalanceNudge(taskId);
+    setRebalanceState((prev) => ({
+      ...prev,
+      [taskId]: {
+        isLoading: false,
+        result,
+        error: result
+          ? null
+          : "Couldn't check in on this right now, try again in a bit.",
+      },
+    }));
+  };
+
+  const handleDeferIt = (taskId: string) => {
+    const deferUntil = rebalanceState[taskId]?.result?.suggestedDeferUntil;
+
+    // Slide/fade the row out first, then actually apply the store change
+    // and hide it once the animation has had time to play.
+    setExitingTaskIds((prev) => new Set(prev).add(taskId));
+
+    setTimeout(() => {
+      deferTask(taskId, deferUntil);
+      setHiddenTaskIds((prev) => new Set(prev).add(taskId));
+      setExitingTaskIds((prev) => {
+        const next = new Set(prev);
+        next.delete(taskId);
+        return next;
+      });
+      setRebalanceState((prev) => {
+        const next = { ...prev };
+        delete next[taskId];
+        return next;
+      });
+    }, DRAWER_ANIMATION_MS);
+  };
+
+  const handleKeepVisible = (taskId: string) => {
+    setRebalanceState((prev) => {
+      const next = { ...prev };
+      delete next[taskId];
+      return next;
+    });
   };
 
   return (
@@ -126,7 +193,9 @@ export default function DevDashboard() {
       </div>
 
       {CATEGORIES.map((category) => {
-        const categoryTasks = tasks.filter((task) => task.category === category);
+        const categoryTasks = tasks.filter(
+          (task) => task.category === category && !hiddenTaskIds.has(task.id),
+        );
         return (
           <div key={category} style={{ marginBottom: 20 }}>
             <h2 style={{ fontSize: 15, marginBottom: 6 }}>
@@ -149,10 +218,35 @@ export default function DevDashboard() {
                 <tbody>
                   {categoryTasks.map((task) => {
                     const nudge = nudgeState[task.id];
+                    const rebalance = rebalanceState[task.id];
+                    const isExiting = exitingTaskIds.has(task.id);
                     return (
                       <Fragment key={task.id}>
-                        <tr style={{ borderBottom: "1px solid #eee" }}>
-                          <td style={{ padding: "4px 6px" }}>{task.title}</td>
+                        <tr
+                          style={{
+                            borderBottom: "1px solid #eee",
+                            transition: `transform ${DRAWER_ANIMATION_MS}ms ease, opacity ${DRAWER_ANIMATION_MS}ms ease`,
+                            transform: isExiting ? "translateY(16px)" : "translateY(0)",
+                            opacity: isExiting ? 0 : 1,
+                          }}
+                        >
+                          <td style={{ padding: "4px 6px" }}>
+                            {task.title}
+                            {task.deferCount > 0 && (
+                              <span
+                                style={{
+                                  marginLeft: 6,
+                                  padding: "1px 6px",
+                                  fontSize: 11,
+                                  borderRadius: 999,
+                                  background: "#eee",
+                                  color: "#666",
+                                }}
+                              >
+                                Moved {task.deferCount}x
+                              </span>
+                            )}
+                          </td>
                           <td style={{ padding: "4px 6px" }}>{task.priority}</td>
                           <td style={{ padding: "4px 6px" }}>{task.load}</td>
                           <td style={{ padding: "4px 6px" }}>{task.status}</td>
@@ -171,6 +265,16 @@ export default function DevDashboard() {
                                 style={{ fontSize: 12, marginLeft: 6 }}
                               >
                                 {nudge?.isLoading ? "Breaking down…" : "Break this down"}
+                              </button>
+                            )}
+                            {task.priority === "non_urgent" && (
+                              <button
+                                type="button"
+                                onClick={() => handleRebalance(task.id)}
+                                disabled={rebalance?.isLoading}
+                                style={{ fontSize: 12, marginLeft: 6 }}
+                              >
+                                {rebalance?.isLoading ? "Checking in…" : "Rebalance"}
                               </button>
                             )}
                           </td>
@@ -202,6 +306,49 @@ export default function DevDashboard() {
                                         color={STICKY_COLORS[i % STICKY_COLORS.length]}
                                       />
                                     ))}
+                                  </div>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        )}
+                        {(rebalance?.isLoading || rebalance?.error || rebalance?.result) && (
+                          <tr>
+                            <td colSpan={6} style={{ padding: "8px 6px", background: "#fafafa" }}>
+                              {rebalance.isLoading && (
+                                <span style={{ fontSize: 12, color: "#888" }}>Checking in…</span>
+                              )}
+                              {rebalance.error && (
+                                <span style={{ fontSize: 12, color: "#c33" }}>{rebalance.error}</span>
+                              )}
+                              {rebalance.result && (
+                                <div
+                                  style={{
+                                    maxWidth: 320,
+                                    padding: 8,
+                                    border: "1px solid #ddd",
+                                    borderRadius: 6,
+                                    background: "white",
+                                  }}
+                                >
+                                  <p style={{ fontSize: 12, margin: "0 0 8px" }}>
+                                    {rebalance.result.reasoning}
+                                  </p>
+                                  <div style={{ display: "flex", gap: 8 }}>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleDeferIt(task.id)}
+                                      style={{ fontSize: 12 }}
+                                    >
+                                      Defer it
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() => handleKeepVisible(task.id)}
+                                      style={{ fontSize: 12 }}
+                                    >
+                                      Keep it visible
+                                    </button>
                                   </div>
                                 </div>
                               )}
