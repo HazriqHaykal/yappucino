@@ -1,8 +1,13 @@
 import { create } from "zustand";
+import { useAuthStore } from "./useAuthStore";
 import type { Category, SubStep, Task } from "../types/task";
 
-// No auth/backend yet — placeholder until Person A's identity slice lands.
+// Falls back to a shared local id when signed out, so dev/testing doesn't
+// require logging in every time. Still no backend — signed-in tasks live
+// only in memory, tagged with the real user id for whenever persistence
+// lands.
 const LOCAL_USER_ID = "local-user";
+const currentUserId = () => useAuthStore.getState().user?.id ?? LOCAL_USER_ID;
 
 export interface NewTaskInput {
   title: string;
@@ -55,7 +60,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
         ...state.tasks,
         {
           id: crypto.randomUUID(),
-          userId: LOCAL_USER_ID,
+          userId: currentUserId(),
           title: input.title,
           category: input.category,
           priority: input.priority,
@@ -87,7 +92,7 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
       .filter((event) => !existingExternalIds.has(event.externalId))
       .map((event) => ({
         id: crypto.randomUUID(),
-        userId: LOCAL_USER_ID,
+        userId: currentUserId(),
         title: event.title,
         category: event.category,
         priority: event.priority,
