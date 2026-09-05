@@ -1,3 +1,4 @@
+import CharacterCustomization from "./components/CharacterCustomization";
 import TaskInputModal from "./components/TaskInputModal";
 import DevDashboard from "./dev/DevDashboard";
 import { useTaskStore } from "./store/useTaskStore";
@@ -6,6 +7,15 @@ function App() {
   const tasks = useTaskStore((state) => state.tasks);
   const openTaskModal = useTaskStore((state) => state.openTaskModal);
   const removeTask = useTaskStore((state) => state.removeTask);
+
+  const screenParam = new URLSearchParams(window.location.search).get(
+    "screen",
+  );
+  // Preview-only entry point until the Room Scene feature wires this into
+  // the real first-run flow. Visit with ?screen=character.
+  if (screenParam === "character") {
+    return <CharacterCustomization />;
+  }
 
   // Throwaway test surface — see src/dev/DevDashboard.tsx. Doesn't affect
   // the real room/desk-click flow below. Defaults on for `npm run dev` so
@@ -22,7 +32,7 @@ function App() {
     <div className="min-h-screen p-8">
       <div className="mx-auto max-w-2xl">
         <h1 className="mb-6 font-display text-2xl font-bold text-ink">
-          Pace (Hold dulu)
+          Paceful (Hold dulu)
         </h1>
 
         {/* Desk zone — click to add a task, mirroring the room-interaction pattern */}
