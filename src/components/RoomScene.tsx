@@ -1,19 +1,25 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { getColorById } from "../data/characterOptions";
 import { getRoomZoneSummary } from "../services/getRoomZoneState";
 import { runBurnoutCheck } from "../services/runBurnoutCheck";
 import { useCharacterStore } from "../store/useCharacterStore";
 import { useTaskStore } from "../store/useTaskStore";
-import { CATEGORY_LABELS, type BurnoutCheckResult, type Category } from "../types/task";
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  type BurnoutCheckResult,
+  type Category,
+} from "../types/task";
 import BuddyCharacter from "./characters/BuddyCharacter";
 import DailyCheckInModal from "./DailyCheckInModal";
 import GoogleSignIn from "./GoogleSignIn";
-import { CameraIcon, ChatIcon, PaletteIcon } from "./icons";
+import { BellIcon, BellOffIcon, CameraIcon, ChatIcon, PaletteIcon } from "./icons";
 import RoomBackdrop from "./room/RoomBackdrop";
 import ZoneCard from "./room/ZoneCard";
 import SpeechBubble from "./SpeechBubble";
 import TaskBoard from "./TaskBoard";
+import WeeklyRecapModal from "./WeeklyRecapModal";
 
 function IconButton({
   label,
@@ -96,10 +102,16 @@ export default function RoomScene() {
   const [isCheckingBurnout, setIsCheckingBurnout] = useState(false);
   const [burnoutResult, setBurnoutResult] = useState<BurnoutCheckResult | null>(null);
   const [showCheckIn, setShowCheckIn] = useState(false);
+  const [showRecap, setShowRecap] = useState(false);
+  const [isCalendarHovered, setIsCalendarHovered] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">(
+    () => (typeof Notification === "undefined" ? "unsupported" : Notification.permission),
+  );
 
   const rowRef = useRef<HTMLDivElement>(null);
   const hitboxRefs = useRef<Partial<Record<Category, HTMLButtonElement>>>({});
   const cardRefs = useRef<Partial<Record<Category, HTMLDivElement>>>({});
+  const prevZoneStatesRef = useRef<Partial<Record<Category, string>>>({});
 
   const colorOption = getColorById(color);
 
@@ -152,6 +164,32 @@ export default function RoomScene() {
     };
   }, [tasks]);
 
+  // Fires a browser notification only when a zone newly crosses into an
+  // overloaded state (cluttered/dim) — tracked via a ref so it doesn't fire
+  // again on every re-render while the zone stays overloaded.
+  useEffect(() => {
+    if (notifPermission !== "granted") return;
+
+    for (const category of CATEGORIES) {
+      const summary = getRoomZoneSummary(tasks, category);
+      const wasOverloaded =
+        prevZoneStatesRef.current[category] === "cluttered" ||
+        prevZoneStatesRef.current[category] === "dim";
+      const isOverloaded = summary.state === "cluttered" || summary.state === "dim";
+
+      if (isOverloaded && !wasOverloaded) {
+        new Notification("Paceful", {
+          body:
+            summary.state === "dim"
+              ? `${CATEGORY_LABELS[category]} has something overdue.`
+              : `${CATEGORY_LABELS[category]} is piling up — might be worth a look.`,
+        });
+      }
+
+      prevZoneStatesRef.current[category] = summary.state;
+    }
+  }, [tasks, notifPermission]);
+
   const handleSnapshot = () => {
     setFlash(true);
     window.setTimeout(() => setFlash(false), 260);
@@ -163,6 +201,12 @@ export default function RoomScene() {
     const result = await runBurnoutCheck();
     setBurnoutResult(result);
     setIsCheckingBurnout(false);
+  };
+
+  const handleEnableNotifications = async () => {
+    if (typeof Notification === "undefined") return;
+    const permission = await Notification.requestPermission();
+    setNotifPermission(permission);
   };
 
   const goToCustomize = () => {
@@ -236,6 +280,20 @@ export default function RoomScene() {
               />
             ))}
 
+            <button
+              type="button"
+              aria-label="Weekly recap — see how your week's been going"
+              onMouseEnter={() => setIsCalendarHovered(true)}
+              onMouseLeave={() => setIsCalendarHovered(false)}
+              onFocus={() => setIsCalendarHovered(true)}
+              onBlur={() => setIsCalendarHovered(false)}
+              onClick={() => setShowRecap(true)}
+              className={`focus-ring absolute rounded-xl transition-colors ${
+                isCalendarHovered ? "bg-white/20 ring-2 ring-white/70" : "bg-transparent"
+              }`}
+              style={{ left: "23%", top: "30%", width: "8%", height: "16%" }}
+            />
+
             <div
               aria-hidden="true"
               className="pointer-events-none absolute inset-x-0 bottom-0 flex justify-center"
@@ -295,6 +353,24 @@ export default function RoomScene() {
               <IconButton label="Check my workload" onClick={handleCheckWorkload}>
                 <ChatIcon className="h-4 w-4" />
               </IconButton>
+              {notifPermission !== "unsupported" && (
+                <IconButton
+                  label={
+                    notifPermission === "granted"
+                      ? "Overload alerts on"
+                      : notifPermission === "denied"
+                        ? "Notifications blocked in browser settings"
+                        : "Enable overload alerts"
+                  }
+                  onClick={handleEnableNotifications}
+                >
+                  {notifPermission === "granted" ? (
+                    <BellIcon className="h-4 w-4" />
+                  ) : (
+                    <BellOffIcon className="h-4 w-4" />
+                  )}
+                </IconButton>
+              )}
             </div>
 
             <div className="absolute right-4 top-4 flex flex-col gap-2">
@@ -436,6 +512,9 @@ export default function RoomScene() {
       <AnimatePresence>
         {showCheckIn && (
           <DailyCheckInModal key="checkin" onClose={() => setShowCheckIn(false)} />
+        )}
+        {showRecap && (
+          <WeeklyRecapModal key="recap" onClose={() => setShowRecap(false)} />
         )}
       </AnimatePresence>
     </div>
