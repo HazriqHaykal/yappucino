@@ -121,7 +121,7 @@ export default function CharacterCustomization({
                 : "cursor-not-allowed bg-line text-ink-faint"
             }`}
           >
-            {celebrating ? "Buddy created! 🎉" : "Create My Buddy"}
+            {celebrating ? "Buddy created successfully!" : "Create My Buddy"}
           </motion.button>
         </div>
       </div>

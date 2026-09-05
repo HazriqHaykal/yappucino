@@ -86,7 +86,11 @@ interface ConnectorLine {
   d: string;
 }
 
-export default function RoomScene() {
+interface RoomSceneProps {
+  onCustomize: () => void;
+}
+
+export default function RoomScene({ onCustomize }: RoomSceneProps) {
   const tasks = useTaskStore((state) => state.tasks);
   const openTaskModal = useTaskStore((state) => state.openTaskModal);
   const name = useCharacterStore((state) => state.name);
@@ -207,10 +211,6 @@ export default function RoomScene() {
     if (typeof Notification === "undefined") return;
     const permission = await Notification.requestPermission();
     setNotifPermission(permission);
-  };
-
-  const goToCustomize = () => {
-    window.location.search = "?screen=character";
   };
 
   return (
@@ -344,7 +344,7 @@ export default function RoomScene() {
             </div>
 
             <div className="absolute left-4 top-4 flex gap-2">
-              <IconButton label="Customize buddy" onClick={goToCustomize}>
+              <IconButton label="Customize buddy" onClick={onCustomize}>
                 <PaletteIcon className="h-4 w-4" />
               </IconButton>
               <IconButton label="Take a snapshot" onClick={handleSnapshot}>
