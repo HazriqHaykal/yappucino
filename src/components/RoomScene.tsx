@@ -7,6 +7,7 @@ import { useCharacterStore } from "../store/useCharacterStore";
 import { useTaskStore } from "../store/useTaskStore";
 import { CATEGORY_LABELS, type BurnoutCheckResult, type Category } from "../types/task";
 import BuddyCharacter from "./characters/BuddyCharacter";
+import GoogleSignIn from "./GoogleSignIn";
 import RoomBackdrop from "./room/RoomBackdrop";
 import ZoneCard from "./room/ZoneCard";
 import SpeechBubble from "./SpeechBubble";
@@ -175,7 +176,10 @@ export default function RoomScene() {
   return (
     <div className="min-h-screen px-5 py-10 sm:px-8 sm:py-14">
       <div className="mx-auto max-w-[1680px]">
-        <header className="mb-8 text-center">
+        <header className="relative mb-8 text-center">
+          <div className="absolute right-0 top-0">
+            <GoogleSignIn />
+          </div>
           <p className="font-display text-xs font-bold tracking-[0.24em] text-clay uppercase">
             Paceful
           </p>

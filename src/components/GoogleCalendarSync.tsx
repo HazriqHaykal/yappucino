@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { GoogleOAuthProvider, useGoogleLogin } from "@react-oauth/google";
-import { useTaskStore } from "../store/useTaskStore";
 import { fetchUpcomingEvents, mapEventToTaskInput } from "../services/googleCalendar";
 import { inferCalendarTaskAttributes } from "../services/inferCalendarTaskAttributes";
+import { useAuthStore } from "../store/useAuthStore";
+import { useTaskStore } from "../store/useTaskStore";
 import type { CalendarImportInput } from "../store/useTaskStore";
 
 /**
@@ -51,25 +51,24 @@ async function resolveImportAttributes(
   };
 }
 
-const CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-const CALENDAR_READONLY_SCOPE = "https://www.googleapis.com/auth/calendar.readonly";
-
-function GoogleCalendarSyncButton() {
+// Calendar access now comes from the same OAuth consent as GoogleSignIn
+// (one combined sign-in flow instead of a separate connect step) — this
+// component just uses whatever access token that produced.
+export default function GoogleCalendarSync() {
+  const accessToken = useAuthStore((state) => state.accessToken);
   const importCalendarTasks = useTaskStore((state) => state.importCalendarTasks);
 
-  // Access token lives only in memory for this hackathon demo — no
-  // localStorage, no refresh handling. Re-connecting just re-runs the flow.
-  const [accessToken, setAccessToken] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const runSync = async (token: string) => {
+  const runSync = async () => {
+    if (!accessToken) return;
     setIsSyncing(true);
     setError(null);
     setMessage(null);
     try {
-      const events = await fetchUpcomingEvents(token);
+      const events = await fetchUpcomingEvents(accessToken);
       const mapped = events
         .map(mapEventToTaskInput)
         .filter((task): task is CalendarImportInput => task !== null);
@@ -92,50 +91,26 @@ function GoogleCalendarSyncButton() {
     }
   };
 
-  const login = useGoogleLogin({
-    scope: CALENDAR_READONLY_SCOPE,
-    onSuccess: (tokenResponse) => {
-      setAccessToken(tokenResponse.access_token);
-      runSync(tokenResponse.access_token);
-    },
-    onError: () => {
-      setError("Google sign-in failed or was cancelled. Please try again.");
-    },
-  });
-
-  return (
-    <div className="rounded-2xl border border-line bg-paper-card p-4 shadow-flat">
-      <button
-        type="button"
-        onClick={() => login()}
-        disabled={isSyncing}
-        className="focus-ring rounded-full bg-clay px-4 py-2 font-display text-sm font-semibold text-white transition-colors hover:bg-clay-dark disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {isSyncing
-          ? "Syncing…"
-          : accessToken
-            ? "Re-sync Google Calendar"
-            : "Connect Google Calendar"}
-      </button>
-      {message && <p className="mt-2 text-sm text-mint-shade">{message}</p>}
-      {error && <p className="mt-2 text-sm text-clay-dark">{error}</p>}
-    </div>
-  );
-}
-
-export default function GoogleCalendarSync() {
-  if (!CLIENT_ID) {
+  if (!accessToken) {
     return (
       <div className="rounded-2xl border border-line bg-paper-card p-4 text-sm text-ink-faint shadow-flat">
-        Google Calendar sync needs VITE_GOOGLE_CLIENT_ID set in .env (see
-        .env.example) to show the connect button.
+        Sign in with Google above to sync your calendar.
       </div>
     );
   }
 
   return (
-    <GoogleOAuthProvider clientId={CLIENT_ID}>
-      <GoogleCalendarSyncButton />
-    </GoogleOAuthProvider>
+    <div className="rounded-2xl border border-line bg-paper-card p-4 shadow-flat">
+      <button
+        type="button"
+        onClick={runSync}
+        disabled={isSyncing}
+        className="focus-ring rounded-full bg-clay px-4 py-2 font-display text-sm font-semibold text-white transition-colors hover:bg-clay-dark disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        {isSyncing ? "Syncing…" : "Sync Google Calendar"}
+      </button>
+      {message && <p className="mt-2 text-sm text-mint-shade">{message}</p>}
+      {error && <p className="mt-2 text-sm text-clay-dark">{error}</p>}
+    </div>
   );
 }
