@@ -260,7 +260,7 @@ export default function RoomPage({ onCustomize }: RoomPageProps) {
               />
             ))}
 
-            <button
+            <motion.button
               type="button"
               aria-label="Weekly recap — see how your week's been going"
               onMouseEnter={() => setIsCalendarHovered(true)}
@@ -268,10 +268,20 @@ export default function RoomPage({ onCustomize }: RoomPageProps) {
               onFocus={() => setIsCalendarHovered(true)}
               onBlur={() => setIsCalendarHovered(false)}
               onClick={() => setShowRecap(true)}
-              className={`focus-ring absolute rounded-xl transition-colors ${
-                isCalendarHovered ? "bg-white/20 ring-2 ring-white/70" : "bg-transparent"
+              animate={
+                isCalendarHovered
+                  ? { opacity: 1 }
+                  : { opacity: [0.55, 0.9, 0.55] }
+              }
+              transition={
+                isCalendarHovered
+                  ? { duration: 0.15 }
+                  : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
+              }
+              className={`focus-ring absolute rounded-xl ring-2 ${
+                isCalendarHovered ? "bg-white/20 ring-white/70" : "bg-white/10 ring-white/40"
               }`}
-              style={{ left: "23%", top: "30%", width: "8%", height: "16%" }}
+              style={{ left: "44%", top: "15%", width: "7%", height: "13.3%" }}
             />
 
             <div

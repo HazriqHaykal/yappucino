@@ -137,24 +137,25 @@ export default function RoomBackdrop() {
         <rect x="18" y="36" width="26" height="22" rx="3" fill="#33281f" filter="url(#softShadow)" />
         <rect x="21" y="39" width="20" height="16" rx="2" fill="url(#screenGrad)" />
 
-        {/* desk calendar — opens the Weekly Recap */}
+        {/* wall calendar — opens the Weekly Recap; sits in the open wall
+            space between the shelf (ends x≈66) and the window (starts x≈133) */}
         <rect
-          x="48"
-          y="40"
+          x="88"
+          y="18"
           width="14"
           height="16"
           rx="1.5"
           fill="#fffcf6"
           filter="url(#softShadow)"
         />
-        <rect x="48" y="40" width="14" height="5" rx="1.5" fill="#d9764a" />
-        <rect x="50.5" y="38" width="1.6" height="4" rx="0.8" fill="#7a6a5b" />
-        <rect x="57.5" y="38" width="1.6" height="4" rx="0.8" fill="#7a6a5b" />
-        <circle cx="51.5" cy="48" r="0.9" fill="#d9764a" />
-        <circle cx="55" cy="48" r="0.9" fill="#a9d4e8" />
-        <circle cx="58.5" cy="48" r="0.9" fill="#a9d4e8" />
-        <circle cx="51.5" cy="52" r="0.9" fill="#a9d4e8" />
-        <circle cx="55" cy="52" r="0.9" fill="#a9d4e8" />
+        <rect x="88" y="18" width="14" height="5" rx="1.5" fill="#d9764a" />
+        <circle cx="91.5" cy="16.5" r="0.9" fill="#7a6a5b" />
+        <circle cx="98.5" cy="16.5" r="0.9" fill="#7a6a5b" />
+        <circle cx="91.5" cy="26" r="0.9" fill="#d9764a" />
+        <circle cx="95" cy="26" r="0.9" fill="#a9d4e8" />
+        <circle cx="98.5" cy="26" r="0.9" fill="#a9d4e8" />
+        <circle cx="91.5" cy="30" r="0.9" fill="#a9d4e8" />
+        <circle cx="95" cy="30" r="0.9" fill="#a9d4e8" />
         <ellipse cx="26" cy="44" rx="4" ry="2" fill="#ffffff" opacity="0.3" />
         <circle cx="41" cy="56" r="1" fill="#a7dcc4" />
 
