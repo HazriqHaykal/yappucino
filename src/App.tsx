@@ -32,7 +32,7 @@ function App() {
     <div className="min-h-screen p-8">
       <div className="mx-auto max-w-2xl">
         <h1 className="mb-6 font-display text-2xl font-bold text-ink">
-          Pace (Hold dulu)
+          Paceful (Hold dulu)
         </h1>
 
         {/* Desk zone — click to add a task, mirroring the room-interaction pattern */}

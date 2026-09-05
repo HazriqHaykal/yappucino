@@ -53,13 +53,13 @@ export default function CharacterCustomization({
       <div className="mx-auto max-w-5xl">
         <header className="mb-10 text-center lg:mb-14 lg:text-left">
           <p className="font-display text-xs font-bold tracking-[0.24em] text-clay uppercase">
-            Pace
+            Paceful
           </p>
           <h1 className="mt-3 font-display text-3xl font-semibold text-ink sm:text-4xl">
-            Meet your Pace buddy.
+            Meet your Paceful buddy.
           </h1>
           <p className="mt-2 text-base text-ink-soft">
-            Your little companion for keeping life in balance.
+            Find your balance, one step at a time.
           </p>
         </header>
 
