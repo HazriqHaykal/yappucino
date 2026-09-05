@@ -29,9 +29,12 @@ function getSpeechRecognitionCtor(): (new () => SpeechRecognitionInstance) | nul
 
 interface DailyCheckInModalProps {
   onClose: () => void;
+  /** Fired once the check-in is saved, before the modal closes, so the
+   * parent can react (e.g. show a buddy reply) to the mood/note. */
+  onSaved?: (mood: Mood, note: string) => void;
 }
 
-export default function DailyCheckInModal({ onClose }: DailyCheckInModalProps) {
+export default function DailyCheckInModal({ onClose, onSaved }: DailyCheckInModalProps) {
   const user = useAuthStore((state) => state.user);
   const setMood = useCharacterStore((state) => state.setMood);
 
@@ -80,6 +83,8 @@ export default function DailyCheckInModal({ onClose }: DailyCheckInModalProps) {
       await saveCheckIn(user.id, selectedMood, note.trim());
       setIsSaving(false);
     }
+
+    onSaved?.(selectedMood, note.trim());
 
     setSaved(true);
     window.setTimeout(onClose, 900);
@@ -144,11 +149,7 @@ export default function DailyCheckInModal({ onClose }: DailyCheckInModalProps) {
                       }`}
                     >
                       {selected && (
-                        <motion.span
-                          layoutId="mood-selected-pill"
-                          className="absolute inset-0 z-0 rounded-full bg-clay"
-                          transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                        />
+                        <span className="absolute inset-0 z-0 rounded-full bg-clay" />
                       )}
                       <span className="relative z-10">{option.label}</span>
                     </button>

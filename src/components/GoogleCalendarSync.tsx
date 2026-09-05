@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { fetchUpcomingEvents, mapEventToTaskInput } from "../services/googleCalendar";
 import { inferCalendarTaskAttributes } from "../services/inferCalendarTaskAttributes";
 import { useAuthStore } from "../store/useAuthStore";
@@ -90,6 +90,17 @@ export default function GoogleCalendarSync() {
       setIsSyncing(false);
     }
   };
+
+  // Auto-sync once right after sign-in, so the user doesn't have to find
+  // and click the button themselves. accessToken only changes on an actual
+  // sign-in/sign-out (see useAuthStore), so this fires exactly once per
+  // session rather than on every re-render.
+  useEffect(() => {
+    if (accessToken) {
+      runSync();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [accessToken]);
 
   if (!accessToken) {
     return (

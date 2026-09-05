@@ -7,7 +7,7 @@ import type { Category, SubStep, Task } from "../types/task";
 // only in memory, tagged with the real user id for whenever persistence
 // lands.
 const LOCAL_USER_ID = "local-user";
-const currentUserId = () => useAuthStore.getState().user?.id ?? LOCAL_USER_ID;
+export const currentUserId = () => useAuthStore.getState().user?.id ?? LOCAL_USER_ID;
 
 export interface NewTaskInput {
   title: string;
