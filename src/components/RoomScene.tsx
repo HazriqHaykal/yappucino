@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useLayoutEffect, useRef, useState } from "react";
+import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { getColorById } from "../data/characterOptions";
 import { getRoomZoneSummary } from "../services/getRoomZoneState";
 import { runBurnoutCheck } from "../services/runBurnoutCheck";
@@ -7,18 +7,13 @@ import { useCharacterStore } from "../store/useCharacterStore";
 import { useTaskStore } from "../store/useTaskStore";
 import { CATEGORY_LABELS, type BurnoutCheckResult, type Category } from "../types/task";
 import BuddyCharacter from "./characters/BuddyCharacter";
+import DailyCheckInModal from "./DailyCheckInModal";
 import GoogleSignIn from "./GoogleSignIn";
+import { CameraIcon, ChatIcon, PaletteIcon } from "./icons";
 import RoomBackdrop from "./room/RoomBackdrop";
 import ZoneCard from "./room/ZoneCard";
 import SpeechBubble from "./SpeechBubble";
 import TaskBoard from "./TaskBoard";
-
-const MOOD_EMOJI: Record<string, string> = {
-  happy: "😊",
-  calm: "😌",
-  tired: "🥱",
-  excited: "🤩",
-};
 
 function IconButton({
   label,
@@ -27,7 +22,7 @@ function IconButton({
 }: {
   label: string;
   onClick: () => void;
-  children: string;
+  children: ReactNode;
 }) {
   return (
     <button
@@ -35,7 +30,7 @@ function IconButton({
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="focus-ring flex h-10 w-10 items-center justify-center rounded-full border border-line bg-paper-card text-base shadow-[0_8px_20px_rgba(51,40,31,0.1)] transition-transform hover:-translate-y-0.5 active:translate-y-0 active:scale-95"
+      className="focus-ring flex h-10 w-10 items-center justify-center rounded-full border border-line bg-paper-card text-base text-ink-soft shadow-[0_8px_20px_rgba(51,40,31,0.1)] transition-transform hover:-translate-y-0.5 hover:text-ink active:translate-y-0 active:scale-95"
     >
       {children}
     </button>
@@ -100,6 +95,7 @@ export default function RoomScene() {
   const [lines, setLines] = useState<ConnectorLine[]>([]);
   const [isCheckingBurnout, setIsCheckingBurnout] = useState(false);
   const [burnoutResult, setBurnoutResult] = useState<BurnoutCheckResult | null>(null);
+  const [showCheckIn, setShowCheckIn] = useState(false);
 
   const rowRef = useRef<HTMLDivElement>(null);
   const hitboxRefs = useRef<Partial<Record<Category, HTMLButtonElement>>>({});
@@ -161,7 +157,7 @@ export default function RoomScene() {
     window.setTimeout(() => setFlash(false), 260);
   };
 
-  const handleTapBuddy = async () => {
+  const handleCheckWorkload = async () => {
     setIsCheckingBurnout(true);
     setBurnoutResult(null);
     const result = await runBurnoutCheck();
@@ -253,8 +249,8 @@ export default function RoomScene() {
             <div className="pointer-events-none absolute inset-x-0 bottom-[10%] flex justify-center">
               <motion.button
                 type="button"
-                onClick={handleTapBuddy}
-                aria-label="Tap your buddy for a check-in"
+                onClick={() => setShowCheckIn(true)}
+                aria-label="Tap your buddy for a daily check-in"
                 animate={{ scale: zoom }}
                 whileTap={{ scale: zoom * 0.95 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
@@ -291,10 +287,13 @@ export default function RoomScene() {
 
             <div className="absolute left-4 top-4 flex gap-2">
               <IconButton label="Customize buddy" onClick={goToCustomize}>
-                🎨
+                <PaletteIcon className="h-4 w-4" />
               </IconButton>
               <IconButton label="Take a snapshot" onClick={handleSnapshot}>
-                📸
+                <CameraIcon className="h-4 w-4" />
+              </IconButton>
+              <IconButton label="Check my workload" onClick={handleCheckWorkload}>
+                <ChatIcon className="h-4 w-4" />
               </IconButton>
             </div>
 
@@ -313,9 +312,8 @@ export default function RoomScene() {
               </IconButton>
             </div>
 
-            <div className="absolute bottom-4 left-4 flex items-center gap-1.5 rounded-full border border-line bg-paper-card/90 px-3 py-1.5 font-display text-xs font-semibold text-ink shadow-sm">
-              <span>{MOOD_EMOJI[mood] ?? MOOD_EMOJI.happy}</span>
-              <span className="capitalize">{mood}</span>
+            <div className="absolute bottom-4 left-4 rounded-full border border-line bg-paper-card/90 px-3 py-1.5 font-display text-xs font-semibold capitalize text-ink shadow-sm">
+              Feeling {mood}
             </div>
 
             <AnimatePresence>
@@ -434,6 +432,12 @@ export default function RoomScene() {
 
         <TaskBoard />
       </div>
+
+      <AnimatePresence>
+        {showCheckIn && (
+          <DailyCheckInModal key="checkin" onClose={() => setShowCheckIn(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
