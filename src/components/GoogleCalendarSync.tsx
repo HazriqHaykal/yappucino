@@ -104,12 +104,12 @@ function GoogleCalendarSyncButton() {
   });
 
   return (
-    <div style={{ marginBottom: 24, padding: 16, border: "1px solid #ccc", borderRadius: 8 }}>
+    <div className="rounded-2xl border border-line bg-paper-card p-4 shadow-flat">
       <button
         type="button"
         onClick={() => login()}
         disabled={isSyncing}
-        style={{ padding: "8px 16px", cursor: isSyncing ? "not-allowed" : "pointer" }}
+        className="focus-ring rounded-full bg-clay px-4 py-2 font-display text-sm font-semibold text-white transition-colors hover:bg-clay-dark disabled:cursor-not-allowed disabled:opacity-60"
       >
         {isSyncing
           ? "Syncing…"
@@ -117,8 +117,8 @@ function GoogleCalendarSyncButton() {
             ? "Re-sync Google Calendar"
             : "Connect Google Calendar"}
       </button>
-      {message && <p style={{ color: "#2a2", marginTop: 8, fontSize: 13 }}>{message}</p>}
-      {error && <p style={{ color: "#c33", marginTop: 8, fontSize: 13 }}>{error}</p>}
+      {message && <p className="mt-2 text-sm text-mint-shade">{message}</p>}
+      {error && <p className="mt-2 text-sm text-clay-dark">{error}</p>}
     </div>
   );
 }
@@ -126,18 +126,9 @@ function GoogleCalendarSyncButton() {
 export default function GoogleCalendarSync() {
   if (!CLIENT_ID) {
     return (
-      <div
-        style={{
-          marginBottom: 24,
-          padding: 16,
-          border: "1px solid #ccc",
-          borderRadius: 8,
-          color: "#888",
-          fontSize: 13,
-        }}
-      >
-        Google Calendar sync needs VITE_GOOGLE_CLIENT_ID set in .env
-        (see .env.example) to show the connect button.
+      <div className="rounded-2xl border border-line bg-paper-card p-4 text-sm text-ink-faint shadow-flat">
+        Google Calendar sync needs VITE_GOOGLE_CLIENT_ID set in .env (see
+        .env.example) to show the connect button.
       </div>
     );
   }

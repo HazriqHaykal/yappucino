@@ -64,6 +64,7 @@ export default function Face({ anchors, excited }: FaceProps) {
         stroke="#33281F"
         strokeWidth="4"
         strokeLinecap="round"
+        initial={false}
         animate={{
           d: excited
             ? `M ${100 - 15} ${mouthY - 2} Q 100 ${mouthY + 16} ${100 + 15} ${mouthY - 2}`
