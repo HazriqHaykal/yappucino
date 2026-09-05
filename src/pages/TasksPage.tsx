@@ -3,8 +3,8 @@ import { runRebalanceNudge } from "../services/runRebalanceNudge";
 import { runStructureNudge } from "../services/runStructureNudge";
 import { useTaskStore } from "../store/useTaskStore";
 import { CATEGORIES, CATEGORY_LABELS, type RebalanceNudgeResult } from "../types/task";
-import GoogleCalendarSync from "./GoogleCalendarSync";
-import StickyNote from "./StickyNote";
+import GoogleCalendarSync from "../components/GoogleCalendarSync";
+import StickyNote from "../components/StickyNote";
 
 const STICKY_ROTATIONS = [-3, 2, -2, 3, -1.5];
 const STICKY_COLORS: ("yellow" | "lavender")[] = ["yellow", "lavender"];
@@ -22,7 +22,7 @@ interface RebalanceState {
   error: string | null;
 }
 
-export default function TaskBoard() {
+export default function TasksPage() {
   const tasks = useTaskStore((state) => state.tasks);
   const removeTask = useTaskStore((state) => state.removeTask);
   const clearTasks = useTaskStore((state) => state.clearTasks);
@@ -98,7 +98,7 @@ export default function TaskBoard() {
   };
 
   return (
-    <div className="mx-auto mt-10 max-w-4xl">
+    <div className="mx-auto max-w-4xl px-5 py-10 sm:px-8">
       <div className="mb-6 flex items-center justify-between gap-4">
         <h2 className="font-display text-lg font-semibold text-ink">Tasks</h2>
         <button

@@ -61,13 +61,14 @@ export default function RoomBackdrop() {
         </defs>
 
         {/* wall */}
-        <rect x="0" y="0" width="200" height="78" fill="url(#wallGrad)" />
-        <rect x="0" y="74" width="200" height="6" fill="#ecdfca" />
+        <rect x="0" y="0" width="200" height="66" fill="url(#wallGrad)" />
+        <rect x="0" y="62" width="200" height="6" fill="#ecdfca" />
 
-        {/* floor */}
-        <rect x="0" y="80" width="200" height="40" fill="url(#floorGrad)" />
+        {/* floor — extended up from the original y=80 boundary to give more
+            floor space at the bottom of the scene */}
+        <rect x="0" y="68" width="200" height="52" fill="url(#floorGrad)" />
         {[20, 40, 60, 80, 100, 120, 140, 160, 180].map((x) => (
-          <rect key={x} x={x} y="80" width="1" height="40" fill="#c47a4c" opacity="0.18" />
+          <rect key={x} x={x} y="68" width="1" height="52" fill="#c47a4c" opacity="0.18" />
         ))}
 
         {/* window */}

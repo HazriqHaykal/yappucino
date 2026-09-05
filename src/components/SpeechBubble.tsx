@@ -5,7 +5,7 @@ interface SpeechBubbleProps {
 
 export default function SpeechBubble({ isLoading, text }: SpeechBubbleProps) {
   return (
-    <div className="relative inline-block max-w-sm">
+    <div className="relative inline-block w-full max-w-full sm:max-w-sm lg:max-w-md">
       <div className="rounded-2xl border border-line bg-paper-card px-4 py-3 shadow-pop">
         {isLoading ? (
           <span className="flex items-center gap-1 py-1" aria-label="Buddy is thinking">
@@ -14,7 +14,7 @@ export default function SpeechBubble({ isLoading, text }: SpeechBubbleProps) {
             <span className="h-2 w-2 animate-bounce rounded-full bg-ink-faint" />
           </span>
         ) : (
-          <p className="font-display text-sm text-ink">{text}</p>
+          <p className="break-words font-display text-xs text-ink sm:text-sm">{text}</p>
         )}
       </div>
       {/* Triangle tail pointing down toward the buddy */}

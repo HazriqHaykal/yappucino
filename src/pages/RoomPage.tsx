@@ -3,23 +3,24 @@ import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "re
 import { getColorById } from "../data/characterOptions";
 import { getRoomZoneSummary } from "../services/getRoomZoneState";
 import { runBurnoutCheck } from "../services/runBurnoutCheck";
+import { runCheckInResponse } from "../services/runCheckInResponse";
 import { useCharacterStore } from "../store/useCharacterStore";
 import { useTaskStore } from "../store/useTaskStore";
+import type { Mood } from "../types/checkIn";
 import {
   CATEGORIES,
   CATEGORY_LABELS,
   type BurnoutCheckResult,
   type Category,
 } from "../types/task";
-import BuddyCharacter from "./characters/BuddyCharacter";
-import DailyCheckInModal from "./DailyCheckInModal";
-import GoogleSignIn from "./GoogleSignIn";
-import { BellIcon, BellOffIcon, CameraIcon, ChatIcon, PaletteIcon } from "./icons";
-import RoomBackdrop from "./room/RoomBackdrop";
-import ZoneCard from "./room/ZoneCard";
-import SpeechBubble from "./SpeechBubble";
-import TaskBoard from "./TaskBoard";
-import WeeklyRecapModal from "./WeeklyRecapModal";
+import BuddyCharacter from "../components/characters/BuddyCharacter";
+import DailyCheckInModal from "../components/DailyCheckInModal";
+import GoogleSignIn from "../components/GoogleSignIn";
+import { BellIcon, BellOffIcon, CameraIcon, ChatIcon, PaletteIcon } from "../components/icons";
+import RoomBackdrop from "../components/room/RoomBackdrop";
+import ZoneCard from "../components/room/ZoneCard";
+import SpeechBubble from "../components/SpeechBubble";
+import WeeklyRecapModal from "../components/WeeklyRecapModal";
 
 function IconButton({
   label,
@@ -36,7 +37,7 @@ function IconButton({
       aria-label={label}
       title={label}
       onClick={onClick}
-      className="focus-ring flex h-10 w-10 items-center justify-center rounded-full border border-line bg-paper-card text-base text-ink-soft shadow-[0_8px_20px_rgba(51,40,31,0.1)] transition-transform hover:-translate-y-0.5 hover:text-ink active:translate-y-0 active:scale-95"
+      className="focus-ring flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-line bg-paper-card text-sm text-ink-soft shadow-[0_8px_20px_rgba(51,40,31,0.1)] transition-transform hover:-translate-y-0.5 hover:text-ink active:translate-y-0 active:scale-95 sm:h-10 sm:w-10 sm:text-base"
     >
       {children}
     </button>
@@ -46,51 +47,41 @@ function IconButton({
 // Invisible hitboxes over each piece of furniture, positioned as percentages
 // of the room illustration's own 200x120 viewBox (x/200, y/120) — hovering
 // one highlights the furniture; clicking opens the task modal for it. The
-// side-column cards are connected to their hitbox by a measured line (see
-// useLayoutEffect below), not a fixed arrow, so it always points at the
-// right spot regardless of card size or window width.
+// buddy character below is positioned the same way (left/bottom percentages
+// of this same room box) specifically so its footprint can be reasoned about
+// and kept clear of the "people" rect's laptop illustration.
 const ZONES: {
   category: Category;
   title: string;
   rect: { left: string; top: string; width: string; height: string };
-  side: "left" | "right";
 }[] = [
   {
     category: "study_work",
     title: "Study/Work",
     rect: { left: "5%", top: "30%", width: "27%", height: "37%" },
-    side: "left",
   },
   {
     category: "chores",
     title: "Chores",
     rect: { left: "6%", top: "75%", width: "11%", height: "23%" },
-    side: "left",
   },
   {
     category: "health",
     title: "Health",
     rect: { left: "73%", top: "88%", width: "11%", height: "10%" },
-    side: "right",
   },
   {
     category: "people",
     title: "People",
     rect: { left: "52%", top: "80%", width: "14%", height: "13%" },
-    side: "right",
   },
 ];
 
-interface ConnectorLine {
-  category: Category;
-  d: string;
-}
-
-interface RoomSceneProps {
+interface RoomPageProps {
   onCustomize: () => void;
 }
 
-export default function RoomScene({ onCustomize }: RoomSceneProps) {
+export default function RoomPage({ onCustomize }: RoomPageProps) {
   const tasks = useTaskStore((state) => state.tasks);
   const openTaskModal = useTaskStore((state) => state.openTaskModal);
   const name = useCharacterStore((state) => state.name);
@@ -102,71 +93,26 @@ export default function RoomScene({ onCustomize }: RoomSceneProps) {
   const [zoom, setZoom] = useState(1);
   const [flash, setFlash] = useState(false);
   const [hoveredZone, setHoveredZone] = useState<Category | null>(null);
-  const [lines, setLines] = useState<ConnectorLine[]>([]);
   const [isCheckingBurnout, setIsCheckingBurnout] = useState(false);
   const [burnoutResult, setBurnoutResult] = useState<BurnoutCheckResult | null>(null);
   const [showCheckIn, setShowCheckIn] = useState(false);
+  const [isFetchingCheckInReply, setIsFetchingCheckInReply] = useState(false);
+  const [checkInReply, setCheckInReply] = useState<string | null>(null);
   const [showRecap, setShowRecap] = useState(false);
   const [isCalendarHovered, setIsCalendarHovered] = useState(false);
   const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">(
     () => (typeof Notification === "undefined" ? "unsupported" : Notification.permission),
   );
 
-  const rowRef = useRef<HTMLDivElement>(null);
-  const hitboxRefs = useRef<Partial<Record<Category, HTMLButtonElement>>>({});
-  const cardRefs = useRef<Partial<Record<Category, HTMLDivElement>>>({});
+  const roomRef = useRef<HTMLDivElement>(null);
+  const toolbarRef = useRef<HTMLDivElement>(null);
+  const buddyRef = useRef<HTMLButtonElement>(null);
   const prevZoneStatesRef = useRef<Partial<Record<Category, string>>>({});
+  const [bubbleBounds, setBubbleBounds] = useState<{ top: number; maxHeight: number } | null>(
+    null,
+  );
 
   const colorOption = getColorById(color);
-
-  const leftZones = ZONES.filter((z) => z.side === "left");
-  const rightZones = ZONES.filter((z) => z.side === "right");
-
-  // Measures the real on-screen position of each card and its hitbox, then
-  // draws a curved connector between them — recomputed on resize so it
-  // stays accurate instead of a fixed arrow glyph that doesn't track them.
-  useLayoutEffect(() => {
-    const recompute = () => {
-      const row = rowRef.current;
-      if (!row || window.innerWidth < 1280) {
-        setLines([]);
-        return;
-      }
-      const rowRect = row.getBoundingClientRect();
-      const next: ConnectorLine[] = [];
-
-      for (const zone of ZONES) {
-        const hitbox = hitboxRefs.current[zone.category];
-        const card = cardRefs.current[zone.category];
-        if (!hitbox || !card) continue;
-
-        const hRect = hitbox.getBoundingClientRect();
-        const cRect = card.getBoundingClientRect();
-
-        const x2 = hRect.left + hRect.width / 2 - rowRect.left;
-        const y2 = hRect.top + hRect.height / 2 - rowRect.top;
-        const x1 = (zone.side === "left" ? cRect.right : cRect.left) - rowRect.left;
-        const y1 = cRect.top + cRect.height / 2 - rowRect.top;
-
-        const dx = (x2 - x1) * 0.55;
-        next.push({
-          category: zone.category,
-          d: `M ${x1},${y1} C ${x1 + dx},${y1} ${x2 - dx},${y2} ${x2},${y2}`,
-        });
-      }
-
-      setLines(next);
-    };
-
-    recompute();
-    const observer = new ResizeObserver(recompute);
-    if (rowRef.current) observer.observe(rowRef.current);
-    window.addEventListener("resize", recompute);
-    return () => {
-      observer.disconnect();
-      window.removeEventListener("resize", recompute);
-    };
-  }, [tasks]);
 
   // Fires a browser notification only when a zone newly crosses into an
   // overloaded state (cluttered/dim) — tracked via a ref so it doesn't fire
@@ -194,6 +140,38 @@ export default function RoomScene({ onCustomize }: RoomSceneProps) {
     }
   }, [tasks, notifPermission]);
 
+  // Measures the actual gap between the toolbar and the buddy so the speech
+  // bubble can be constrained to that exact band — guarantees no overlap
+  // regardless of viewport size or how much text the bubble holds, instead
+  // of guessing at a fixed percentage that only happens to work at one
+  // screen size.
+  useLayoutEffect(() => {
+    const GAP = 12;
+    const recomputeBubbleBounds = () => {
+      const room = roomRef.current;
+      const toolbar = toolbarRef.current;
+      const buddy = buddyRef.current;
+      if (!room || !toolbar || !buddy) return;
+
+      const roomRect = room.getBoundingClientRect();
+      const toolbarRect = toolbar.getBoundingClientRect();
+      const buddyRect = buddy.getBoundingClientRect();
+
+      const top = toolbarRect.bottom - roomRect.top + GAP;
+      const maxHeight = Math.max(40, buddyRect.top - roomRect.top - top - GAP);
+      setBubbleBounds({ top, maxHeight });
+    };
+
+    recomputeBubbleBounds();
+    const observer = new ResizeObserver(recomputeBubbleBounds);
+    if (roomRef.current) observer.observe(roomRef.current);
+    window.addEventListener("resize", recomputeBubbleBounds);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener("resize", recomputeBubbleBounds);
+    };
+  }, [zoom]);
+
   const handleSnapshot = () => {
     setFlash(true);
     window.setTimeout(() => setFlash(false), 260);
@@ -202,9 +180,36 @@ export default function RoomScene({ onCustomize }: RoomSceneProps) {
   const handleCheckWorkload = async () => {
     setIsCheckingBurnout(true);
     setBurnoutResult(null);
-    const result = await runBurnoutCheck();
-    setBurnoutResult(result);
-    setIsCheckingBurnout(false);
+    try {
+      const result = await runBurnoutCheck();
+      setBurnoutResult(result);
+    } catch (err) {
+      console.error("[RoomPage] handleCheckWorkload threw unexpectedly:", err);
+    } finally {
+      setIsCheckingBurnout(false);
+    }
+  };
+
+  // Fired by DailyCheckInModal right after the user saves a check-in, so
+  // the buddy can respond with something real to how they say they feel —
+  // shown in the same speech bubble as the workload check, once the modal
+  // closes. Always shows something, even on a Gemini failure, since the
+  // user just told the buddy how they feel and silence would read as the
+  // buddy ignoring them.
+  const handleCheckInSaved = async (mood: Mood, note: string) => {
+    setIsFetchingCheckInReply(true);
+    setCheckInReply(null);
+    try {
+      const message = await runCheckInResponse(mood, note);
+      setCheckInReply(
+        message ?? "Thanks for checking in — take it one step at a time today.",
+      );
+    } catch (err) {
+      console.error("[RoomPage] handleCheckInSaved threw unexpectedly:", err);
+      setCheckInReply("Thanks for checking in — take it one step at a time today.");
+    } finally {
+      setIsFetchingCheckInReply(false);
+    }
   };
 
   const handleEnableNotifications = async () => {
@@ -214,9 +219,9 @@ export default function RoomScene({ onCustomize }: RoomSceneProps) {
   };
 
   return (
-    <div className="min-h-screen px-5 py-10 sm:px-8 sm:py-14">
-      <div className="mx-auto max-w-[1680px]">
-        <header className="relative mb-8 text-center">
+    <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col px-5 py-6 sm:min-h-[calc(100dvh-4rem)] sm:px-8 sm:py-8">
+      <div className="mx-auto flex w-full max-w-[1680px] flex-1 flex-col">
+        <header className="relative mb-4 text-center">
           <div className="absolute right-0 top-0">
             <GoogleSignIn />
           </div>
@@ -226,45 +231,20 @@ export default function RoomScene({ onCustomize }: RoomSceneProps) {
           <h1 className="mt-3 font-display text-2xl font-semibold text-ink sm:text-3xl">
             {name ? `${name}'s room` : "Your room"}
           </h1>
-          <p className="mt-2 text-base text-ink-soft">
-            Each card points to the zone it's tracking.
-          </p>
         </header>
 
-        <div ref={rowRef} className="relative flex items-stretch gap-4 xl:gap-6">
-          {/* left status cards — desktop only, room falls back to the grid below on smaller screens */}
-          <div className="hidden w-72 shrink-0 flex-col justify-between py-2 xl:flex">
-            {leftZones.map(({ category, title }) => {
-              const summary = getRoomZoneSummary(tasks, category);
-              return (
-                <div
-                  key={category}
-                  ref={(el) => {
-                    cardRefs.current[category] = el ?? undefined;
-                  }}
-                >
-                  <ZoneCard
-                    title={title}
-                    subtitle={CATEGORY_LABELS[category]}
-                    state={summary.state}
-                    loadPercent={summary.loadPercent}
-                    onClick={() => openTaskModal(category)}
-                  />
-                </div>
-              );
-            })}
-          </div>
-
-          <div className="relative aspect-[16/9] w-full overflow-hidden rounded-[2.5rem] border border-line bg-paper-card shadow-[0_20px_60px_rgba(51,40,31,0.12)]">
+        {/* room area — targets roughly 2/3 of the page's available height */}
+        <div className="flex flex-[2] items-center justify-center overflow-hidden">
+          <div
+            ref={roomRef}
+            className="relative aspect-[4/5] max-h-full w-full overflow-hidden rounded-[2.5rem] border border-line bg-paper-card shadow-[0_20px_60px_rgba(51,40,31,0.12)] sm:aspect-[16/9]"
+          >
             <RoomBackdrop />
 
             {ZONES.map(({ category, title, rect }) => (
               <button
                 key={category}
                 type="button"
-                ref={(el) => {
-                  hitboxRefs.current[category] = el ?? undefined;
-                }}
                 aria-label={`${title} — check status and add a task`}
                 onMouseEnter={() => setHoveredZone(category)}
                 onMouseLeave={() => setHoveredZone((z) => (z === category ? null : z))}
@@ -304,15 +284,26 @@ export default function RoomScene({ onCustomize }: RoomSceneProps) {
               />
             </div>
 
-            <div className="pointer-events-none absolute inset-x-0 bottom-[10%] flex justify-center">
+            {/* Buddy is positioned with the same left/bottom-percentage
+                system as the zone hitboxes above (rather than flex-centered)
+                so its footprint can be reasoned about directly: at 22% wide,
+                left-anchored at 27%, it spans x:27%-49% — clear of the
+                "people" zone's laptop, which sits at x:52%-66%. Left edge is
+                set directly (not centered via a translate-x class) because
+                framer-motion's animate/whileTap own the element's inline
+                transform and would silently override a CSS transform class
+                applied for centering. */}
+            <div className="pointer-events-none absolute inset-0">
               <motion.button
+                ref={buddyRef}
                 type="button"
                 onClick={() => setShowCheckIn(true)}
                 aria-label="Tap your buddy for a daily check-in"
                 animate={{ scale: zoom }}
                 whileTap={{ scale: zoom * 0.95 }}
                 transition={{ type: "spring", stiffness: 200, damping: 20 }}
-                className="focus-ring pointer-events-auto h-[30%] w-[30%] cursor-pointer sm:h-[28%] sm:w-[28%]"
+                style={{ left: "27%", bottom: "10%" }}
+                className="focus-ring pointer-events-auto absolute h-[22%] w-[22%] cursor-pointer"
               >
                 <BuddyCharacter
                   baseId={baseId}
@@ -324,35 +315,54 @@ export default function RoomScene({ onCustomize }: RoomSceneProps) {
             </div>
 
             <AnimatePresence>
-              {(isCheckingBurnout || burnoutResult) && (
+              {(isCheckingBurnout ||
+                burnoutResult ||
+                isFetchingCheckInReply ||
+                checkInReply) && (
                 <motion.div
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: 8 }}
-                  className="pointer-events-none absolute inset-x-0 bottom-[48%] flex justify-center px-6"
+                  style={
+                    bubbleBounds
+                      ? { top: bubbleBounds.top, maxHeight: bubbleBounds.maxHeight }
+                      : undefined
+                  }
+                  className="pointer-events-none absolute inset-x-0 flex justify-center overflow-y-auto px-[3%]"
                 >
                   <SpeechBubble
-                    isLoading={isCheckingBurnout}
-                    text={burnoutResult?.reasoning ?? null}
+                    isLoading={isCheckingBurnout || isFetchingCheckInReply}
+                    text={burnoutResult?.reasoning ?? checkInReply ?? null}
                   />
                 </motion.div>
               )}
             </AnimatePresence>
 
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-line bg-paper-card px-4 py-1.5 font-display text-sm font-semibold text-ink shadow-sm">
+            <div className="pointer-events-none absolute bottom-[1%] left-1/2 max-w-[45%] -translate-x-1/2 truncate rounded-full border border-line bg-paper-card px-3 py-1 font-display text-xs font-semibold text-ink shadow-sm sm:px-4 sm:py-1.5 sm:text-sm">
               {name || "Buddy"}&rsquo;s Room
             </div>
 
-            <div className="absolute left-4 top-4 flex gap-2">
+            <div
+              ref={toolbarRef}
+              className="absolute left-[3%] right-[3%] top-[3%] flex flex-wrap items-center gap-1.5 sm:gap-2"
+            >
               <IconButton label="Customize buddy" onClick={onCustomize}>
                 <PaletteIcon className="h-4 w-4" />
               </IconButton>
               <IconButton label="Take a snapshot" onClick={handleSnapshot}>
                 <CameraIcon className="h-4 w-4" />
               </IconButton>
-              <IconButton label="Check my workload" onClick={handleCheckWorkload}>
+              <button
+                type="button"
+                onClick={handleCheckWorkload}
+                disabled={isCheckingBurnout}
+                aria-label="Check my workload"
+                title="Check my workload"
+                className="focus-ring flex h-9 items-center gap-1.5 rounded-full bg-clay px-3 text-xs font-semibold text-white shadow-[0_8px_20px_rgba(51,40,31,0.1)] transition-transform hover:-translate-y-0.5 hover:bg-clay-dark active:translate-y-0 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60 sm:h-10 sm:px-4 sm:text-sm"
+              >
                 <ChatIcon className="h-4 w-4" />
-              </IconButton>
+                {isCheckingBurnout ? "Checking…" : "Check workload"}
+              </button>
               {notifPermission !== "unsupported" && (
                 <IconButton
                   label={
@@ -373,7 +383,7 @@ export default function RoomScene({ onCustomize }: RoomSceneProps) {
               )}
             </div>
 
-            <div className="absolute right-4 top-4 flex flex-col gap-2">
+            <div className="absolute right-[3%] top-[3%] flex flex-col gap-1.5 sm:gap-2">
               <IconButton
                 label="Zoom in"
                 onClick={() => setZoom((z) => Math.min(1.3, +(z + 0.1).toFixed(2)))}
@@ -388,7 +398,7 @@ export default function RoomScene({ onCustomize }: RoomSceneProps) {
               </IconButton>
             </div>
 
-            <div className="absolute bottom-4 left-4 rounded-full border border-line bg-paper-card/90 px-3 py-1.5 font-display text-xs font-semibold capitalize text-ink shadow-sm">
+            <div className="pointer-events-none absolute bottom-[1%] left-[2%] max-w-[25%] truncate rounded-full border border-line bg-paper-card/90 px-2 py-1 font-display text-[0.65rem] font-semibold capitalize text-ink shadow-sm sm:px-3 sm:py-1.5 sm:text-xs">
               Feeling {mood}
             </div>
 
@@ -404,118 +414,67 @@ export default function RoomScene({ onCustomize }: RoomSceneProps) {
               )}
             </AnimatePresence>
           </div>
+        </div>
 
-          {/* right status cards — desktop only */}
-          <div className="hidden w-72 shrink-0 flex-col justify-between py-2 xl:flex">
-            {rightZones.map(({ category, title }) => {
+        {/* below the room — targets roughly the remaining 1/3 of the page's
+            available height */}
+        <div className="mt-4 flex flex-[1] flex-col gap-3 overflow-y-auto">
+          {burnoutResult && !isCheckingBurnout && (
+            <div className="rounded-2xl border border-line bg-paper-card p-4 text-sm shadow-flat">
+              <p className="font-display font-semibold text-ink">
+                Overloaded zone:{" "}
+                <span className="font-normal text-ink-soft">
+                  {burnoutResult.overloadedCategory
+                    ? CATEGORY_LABELS[burnoutResult.overloadedCategory]
+                    : "None right now"}
+                </span>
+              </p>
+              <p className="mt-1 text-ink-soft">
+                <span className="font-semibold text-ink">Urgent:</span>{" "}
+                {burnoutResult.urgentTaskIds.length === 0
+                  ? "none"
+                  : burnoutResult.urgentTaskIds
+                      .map((id) => tasks.find((task) => task.id === id)?.title ?? `unknown:${id}`)
+                      .join(", ")}
+              </p>
+              <p className="mt-1 text-ink-soft">
+                <span className="font-semibold text-ink">Non-urgent:</span>{" "}
+                {burnoutResult.nonUrgentTaskIds.length === 0
+                  ? "none"
+                  : burnoutResult.nonUrgentTaskIds
+                      .map((id) => tasks.find((task) => task.id === id)?.title ?? `unknown:${id}`)
+                      .join(", ")}
+              </p>
+            </div>
+          )}
+
+          <div className="grid flex-1 grid-cols-2 gap-3 sm:gap-4">
+            {ZONES.map(({ category, title }) => {
               const summary = getRoomZoneSummary(tasks, category);
               return (
-                <div
+                <ZoneCard
                   key={category}
-                  ref={(el) => {
-                    cardRefs.current[category] = el ?? undefined;
-                  }}
-                >
-                  <ZoneCard
-                    title={title}
-                    subtitle={CATEGORY_LABELS[category]}
-                    state={summary.state}
-                    loadPercent={summary.loadPercent}
-                    onClick={() => openTaskModal(category)}
-                  />
-                </div>
+                  title={title}
+                  subtitle={CATEGORY_LABELS[category]}
+                  state={summary.state}
+                  loadPercent={summary.loadPercent}
+                  onClick={() => openTaskModal(category)}
+                />
               );
             })}
           </div>
-
-          {/* connector lines from each card to the exact hitbox it describes */}
-          <svg
-            aria-hidden="true"
-            className="pointer-events-none absolute inset-0 hidden h-full w-full xl:block"
-          >
-            <defs>
-              <marker
-                id="zone-pointer"
-                viewBox="0 0 10 10"
-                refX="7"
-                refY="5"
-                markerWidth="6"
-                markerHeight="6"
-                orient="auto-start-reverse"
-              >
-                <path d="M0,0 L10,5 L0,10 z" fill="#a6957f" />
-              </marker>
-            </defs>
-            {lines.map((line) => (
-              <path
-                key={line.category}
-                d={line.d}
-                fill="none"
-                stroke="#a6957f"
-                strokeWidth="2"
-                strokeDasharray="4 4"
-                markerEnd="url(#zone-pointer)"
-              />
-            ))}
-          </svg>
         </div>
-
-        {burnoutResult && !isCheckingBurnout && (
-          <div className="mt-4 rounded-2xl border border-line bg-paper-card p-4 text-sm shadow-flat">
-            <p className="font-display font-semibold text-ink">
-              Overloaded zone:{" "}
-              <span className="font-normal text-ink-soft">
-                {burnoutResult.overloadedCategory
-                  ? CATEGORY_LABELS[burnoutResult.overloadedCategory]
-                  : "None right now"}
-              </span>
-            </p>
-            <p className="mt-1 text-ink-soft">
-              <span className="font-semibold text-ink">Urgent:</span>{" "}
-              {burnoutResult.urgentTaskIds.length === 0
-                ? "none"
-                : burnoutResult.urgentTaskIds
-                    .map((id) => tasks.find((task) => task.id === id)?.title ?? `unknown:${id}`)
-                    .join(", ")}
-            </p>
-            <p className="mt-1 text-ink-soft">
-              <span className="font-semibold text-ink">Non-urgent:</span>{" "}
-              {burnoutResult.nonUrgentTaskIds.length === 0
-                ? "none"
-                : burnoutResult.nonUrgentTaskIds
-                    .map((id) => tasks.find((task) => task.id === id)?.title ?? `unknown:${id}`)
-                    .join(", ")}
-            </p>
-          </div>
-        )}
-
-        {/* status cards fall back to a plain grid below the room on narrower screens */}
-        <div className="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:hidden">
-          {ZONES.map(({ category, title }) => {
-            const summary = getRoomZoneSummary(tasks, category);
-            return (
-              <ZoneCard
-                key={category}
-                title={title}
-                subtitle={CATEGORY_LABELS[category]}
-                state={summary.state}
-                loadPercent={summary.loadPercent}
-                onClick={() => openTaskModal(category)}
-              />
-            );
-          })}
-        </div>
-
-        <TaskBoard />
       </div>
 
       <AnimatePresence>
         {showCheckIn && (
-          <DailyCheckInModal key="checkin" onClose={() => setShowCheckIn(false)} />
+          <DailyCheckInModal
+            key="checkin"
+            onClose={() => setShowCheckIn(false)}
+            onSaved={handleCheckInSaved}
+          />
         )}
-        {showRecap && (
-          <WeeklyRecapModal key="recap" onClose={() => setShowRecap(false)} />
-        )}
+        {showRecap && <WeeklyRecapModal key="recap" onClose={() => setShowRecap(false)} />}
       </AnimatePresence>
     </div>
   );

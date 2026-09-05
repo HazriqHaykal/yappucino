@@ -1,4 +1,4 @@
-export type Mood = "happy" | "calm" | "tired" | "excited";
+export type Mood = "happy" | "calm" | "sad" | "stress" | "tired" | "excited";
 
 export interface MoodOption {
   id: Mood;
@@ -11,6 +11,8 @@ export interface MoodOption {
 export const MOOD_OPTIONS: MoodOption[] = [
   { id: "happy", emoji: "😊", label: "Happy" },
   { id: "calm", emoji: "😌", label: "Calm" },
+  { id: "sad", emoji: "😢", label: "Sad" },
+  { id: "stress", emoji: "😖", label: "Stress" },
   { id: "tired", emoji: "🥱", label: "Tired" },
   { id: "excited", emoji: "🤩", label: "Excited" },
 ];

@@ -41,6 +41,18 @@ export interface RebalanceNudgeResult {
   suggestedDeferUntil?: string;
 }
 
+export interface RecoverySuggestion {
+  id: string;
+  userId: string;
+  placeName: string;
+  placeType: string;
+  lat: number;
+  lng: number;
+  reasoning: string;
+  completed: boolean;
+  completedAt?: string;
+}
+
 export interface Task {
   id: string;
   userId: string;
