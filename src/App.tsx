@@ -5,6 +5,7 @@ import TaskInputModal from "./components/TaskInputModal";
 import RecoveryPage from "./pages/RecoveryPage";
 import RoomPage from "./pages/RoomPage";
 import TasksPage from "./pages/TasksPage";
+import TherapyPage from "./pages/TherapyPage";
 
 type Screen = "room" | "character";
 
@@ -23,10 +24,13 @@ function App() {
 
   return (
     <>
+      <div className="pb-16 sm:pb-20">
+        {activeTab === "room" && <RoomPage onCustomize={() => setScreen("character")} />}
+        {activeTab === "tasks" && <TasksPage />}
+        {activeTab === "recovery" && <RecoveryPage />}
+        {activeTab === "therapy" && <TherapyPage />}
+      </div>
       <NavBar active={activeTab} onChange={setActiveTab} />
-      {activeTab === "room" && <RoomPage onCustomize={() => setScreen("character")} />}
-      {activeTab === "tasks" && <TasksPage />}
-      {activeTab === "recovery" && <RecoveryPage />}
       <TaskInputModal />
     </>
   );
