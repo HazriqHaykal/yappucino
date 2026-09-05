@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { useLayoutEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type ReactNode } from "react";
 import { getColorById } from "../data/characterOptions";
 import { getRoomZoneSummary } from "../services/getRoomZoneState";
 import { runBurnoutCheck } from "../services/runBurnoutCheck";
@@ -7,14 +7,20 @@ import { runCheckInResponse } from "../services/runCheckInResponse";
 import { useCharacterStore } from "../store/useCharacterStore";
 import { useTaskStore } from "../store/useTaskStore";
 import type { Mood } from "../types/checkIn";
-import { CATEGORY_LABELS, type BurnoutCheckResult, type Category } from "../types/task";
+import {
+  CATEGORIES,
+  CATEGORY_LABELS,
+  type BurnoutCheckResult,
+  type Category,
+} from "../types/task";
 import BuddyCharacter from "../components/characters/BuddyCharacter";
 import DailyCheckInModal from "../components/DailyCheckInModal";
 import GoogleSignIn from "../components/GoogleSignIn";
-import { CameraIcon, ChatIcon, PaletteIcon } from "../components/icons";
+import { BellIcon, BellOffIcon, CameraIcon, ChatIcon, PaletteIcon } from "../components/icons";
 import RoomBackdrop from "../components/room/RoomBackdrop";
 import ZoneCard from "../components/room/ZoneCard";
 import SpeechBubble from "../components/SpeechBubble";
+import WeeklyRecapModal from "../components/WeeklyRecapModal";
 
 function IconButton({
   label,
@@ -71,7 +77,11 @@ const ZONES: {
   },
 ];
 
-export default function RoomPage() {
+interface RoomPageProps {
+  onCustomize: () => void;
+}
+
+export default function RoomPage({ onCustomize }: RoomPageProps) {
   const tasks = useTaskStore((state) => state.tasks);
   const openTaskModal = useTaskStore((state) => state.openTaskModal);
   const name = useCharacterStore((state) => state.name);
@@ -88,15 +98,47 @@ export default function RoomPage() {
   const [showCheckIn, setShowCheckIn] = useState(false);
   const [isFetchingCheckInReply, setIsFetchingCheckInReply] = useState(false);
   const [checkInReply, setCheckInReply] = useState<string | null>(null);
+  const [showRecap, setShowRecap] = useState(false);
+  const [isCalendarHovered, setIsCalendarHovered] = useState(false);
+  const [notifPermission, setNotifPermission] = useState<NotificationPermission | "unsupported">(
+    () => (typeof Notification === "undefined" ? "unsupported" : Notification.permission),
+  );
 
   const roomRef = useRef<HTMLDivElement>(null);
   const toolbarRef = useRef<HTMLDivElement>(null);
   const buddyRef = useRef<HTMLButtonElement>(null);
+  const prevZoneStatesRef = useRef<Partial<Record<Category, string>>>({});
   const [bubbleBounds, setBubbleBounds] = useState<{ top: number; maxHeight: number } | null>(
     null,
   );
 
   const colorOption = getColorById(color);
+
+  // Fires a browser notification only when a zone newly crosses into an
+  // overloaded state (cluttered/dim) — tracked via a ref so it doesn't fire
+  // again on every re-render while the zone stays overloaded.
+  useEffect(() => {
+    if (notifPermission !== "granted") return;
+
+    for (const category of CATEGORIES) {
+      const summary = getRoomZoneSummary(tasks, category);
+      const wasOverloaded =
+        prevZoneStatesRef.current[category] === "cluttered" ||
+        prevZoneStatesRef.current[category] === "dim";
+      const isOverloaded = summary.state === "cluttered" || summary.state === "dim";
+
+      if (isOverloaded && !wasOverloaded) {
+        new Notification("Paceful", {
+          body:
+            summary.state === "dim"
+              ? `${CATEGORY_LABELS[category]} has something overdue.`
+              : `${CATEGORY_LABELS[category]} is piling up — might be worth a look.`,
+        });
+      }
+
+      prevZoneStatesRef.current[category] = summary.state;
+    }
+  }, [tasks, notifPermission]);
 
   // Measures the actual gap between the toolbar and the buddy so the speech
   // bubble can be constrained to that exact band — guarantees no overlap
@@ -170,8 +212,10 @@ export default function RoomPage() {
     }
   };
 
-  const goToCustomize = () => {
-    window.location.search = "?screen=character";
+  const handleEnableNotifications = async () => {
+    if (typeof Notification === "undefined") return;
+    const permission = await Notification.requestPermission();
+    setNotifPermission(permission);
   };
 
   return (
@@ -215,6 +259,20 @@ export default function RoomPage() {
                 style={rect}
               />
             ))}
+
+            <button
+              type="button"
+              aria-label="Weekly recap — see how your week's been going"
+              onMouseEnter={() => setIsCalendarHovered(true)}
+              onMouseLeave={() => setIsCalendarHovered(false)}
+              onFocus={() => setIsCalendarHovered(true)}
+              onBlur={() => setIsCalendarHovered(false)}
+              onClick={() => setShowRecap(true)}
+              className={`focus-ring absolute rounded-xl transition-colors ${
+                isCalendarHovered ? "bg-white/20 ring-2 ring-white/70" : "bg-transparent"
+              }`}
+              style={{ left: "23%", top: "30%", width: "8%", height: "16%" }}
+            />
 
             <div
               aria-hidden="true"
@@ -288,7 +346,7 @@ export default function RoomPage() {
               ref={toolbarRef}
               className="absolute left-[3%] right-[3%] top-[3%] flex flex-wrap items-center gap-1.5 sm:gap-2"
             >
-              <IconButton label="Customize buddy" onClick={goToCustomize}>
+              <IconButton label="Customize buddy" onClick={onCustomize}>
                 <PaletteIcon className="h-4 w-4" />
               </IconButton>
               <IconButton label="Take a snapshot" onClick={handleSnapshot}>
@@ -305,6 +363,24 @@ export default function RoomPage() {
                 <ChatIcon className="h-4 w-4" />
                 {isCheckingBurnout ? "Checking…" : "Check workload"}
               </button>
+              {notifPermission !== "unsupported" && (
+                <IconButton
+                  label={
+                    notifPermission === "granted"
+                      ? "Overload alerts on"
+                      : notifPermission === "denied"
+                        ? "Notifications blocked in browser settings"
+                        : "Enable overload alerts"
+                  }
+                  onClick={handleEnableNotifications}
+                >
+                  {notifPermission === "granted" ? (
+                    <BellIcon className="h-4 w-4" />
+                  ) : (
+                    <BellOffIcon className="h-4 w-4" />
+                  )}
+                </IconButton>
+              )}
             </div>
 
             <div className="absolute right-[3%] top-[3%] flex flex-col gap-1.5 sm:gap-2">
@@ -398,6 +474,7 @@ export default function RoomPage() {
             onSaved={handleCheckInSaved}
           />
         )}
+        {showRecap && <WeeklyRecapModal key="recap" onClose={() => setShowRecap(false)} />}
       </AnimatePresence>
     </div>
   );

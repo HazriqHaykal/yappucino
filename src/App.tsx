@@ -6,23 +6,25 @@ import RecoveryPage from "./pages/RecoveryPage";
 import RoomPage from "./pages/RoomPage";
 import TasksPage from "./pages/TasksPage";
 
+type Screen = "room" | "character";
+
+function getInitialScreen(): Screen {
+  const screenParam = new URLSearchParams(window.location.search).get("screen");
+  return screenParam === "character" ? "character" : "room";
+}
+
 function App() {
+  const [screen, setScreen] = useState<Screen>(getInitialScreen);
   const [activeTab, setActiveTab] = useState<Tab>("room");
 
-  const screenParam = new URLSearchParams(window.location.search).get(
-    "screen",
-  );
-  // Preview-only entry point until the Google Auth feature's onboarding
-  // flow can gate this on "has this user made a buddy yet". Visit with
-  // ?screen=character.
-  if (screenParam === "character") {
-    return <CharacterCustomization />;
+  if (screen === "character") {
+    return <CharacterCustomization onCreated={() => setScreen("room")} />;
   }
 
   return (
     <>
       <NavBar active={activeTab} onChange={setActiveTab} />
-      {activeTab === "room" && <RoomPage />}
+      {activeTab === "room" && <RoomPage onCustomize={() => setScreen("character")} />}
       {activeTab === "tasks" && <TasksPage />}
       {activeTab === "recovery" && <RecoveryPage />}
       <TaskInputModal />
