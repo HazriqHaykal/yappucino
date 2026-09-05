@@ -13,7 +13,7 @@ interface AuthStore {
   isSigningIn: boolean;
   error: string | null;
   setSigningIn: (value: boolean) => void;
-  setSession: (user: AuthUser, accessToken: string) => void;
+  setSession: (user: AuthUser, accessToken: string | null) => void;
   setError: (message: string | null) => void;
   signOut: () => void;
 }
