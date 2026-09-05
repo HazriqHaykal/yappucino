@@ -53,6 +53,18 @@ export interface RecoverySuggestion {
   completedAt?: string;
 }
 
+export interface TherapySuggestion {
+  id: string;
+  userId: string;
+  placeName: string;
+  placeType: string;
+  lat: number;
+  lng: number;
+  reasoning: string;
+  contacted: boolean;
+  contactedAt?: string;
+}
+
 export interface Task {
   id: string;
   userId: string;

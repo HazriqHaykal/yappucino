@@ -74,14 +74,16 @@ async function searchNearbyByTypes(
   coords: Coordinates,
   apiKey: string,
   includedTypes: string[],
+  radiusMeters: number = SEARCH_RADIUS_METERS,
+  maxResultCount: number = RESULTS_PER_TYPE_GROUP,
 ): Promise<PlaceOption[]> {
   const requestBody = {
     includedTypes,
-    maxResultCount: RESULTS_PER_TYPE_GROUP,
+    maxResultCount,
     locationRestriction: {
       circle: {
         center: { latitude: coords.lat, longitude: coords.lng },
-        radius: SEARCH_RADIUS_METERS,
+        radius: radiusMeters,
       },
     },
   };
@@ -218,5 +220,54 @@ export async function fetchRecoveryPlaceCandidates(
   }
 
   console.log(`[googlePlaces] merged ${merged.length} candidate(s):`, merged);
+  return merged;
+}
+
+// Mental-health professionals are far sparser than cafes/parks, so this
+// searches a wider radius than the recovery flow above.
+const THERAPY_SEARCH_RADIUS_METERS = 10000;
+const THERAPY_RESULTS_PER_GROUP = 8;
+const THERAPY_TYPE_GROUPS: string[][] = [["psychologist"]];
+
+/**
+ * Same shape as fetchRecoveryPlaceCandidates, but searches for nearby
+ * psychologists/counseling practices for the Therapy tab's "find support"
+ * flow. Returns null only if nothing usable came back at all.
+ */
+export async function fetchTherapyPlaceCandidates(
+  coords: Coordinates,
+): Promise<PlaceOption[] | null> {
+  const apiKey = import.meta.env.VITE_GOOGLE_PLACES_API_KEY;
+  if (!apiKey) {
+    console.warn("[googlePlaces] no VITE_GOOGLE_PLACES_API_KEY configured");
+    return null;
+  }
+
+  const resultsByGroup = await Promise.all(
+    THERAPY_TYPE_GROUPS.map((types) =>
+      searchNearbyByTypes(
+        coords,
+        apiKey,
+        types,
+        THERAPY_SEARCH_RADIUS_METERS,
+        THERAPY_RESULTS_PER_GROUP,
+      ),
+    ),
+  );
+
+  const seenIds = new Set<string>();
+  const merged: PlaceOption[] = [];
+  for (const place of resultsByGroup.flat()) {
+    if (seenIds.has(place.id)) continue;
+    seenIds.add(place.id);
+    merged.push(place);
+  }
+
+  if (merged.length === 0) {
+    console.warn("[googlePlaces] no usable therapy places found nearby");
+    return null;
+  }
+
+  console.log(`[googlePlaces] merged ${merged.length} therapy candidate(s):`, merged);
   return merged;
 }
