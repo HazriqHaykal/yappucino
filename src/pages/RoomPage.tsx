@@ -53,26 +53,31 @@ function IconButton({
 const ZONES: {
   category: Category;
   title: string;
+  hint: string;
   rect: { left: string; top: string; width: string; height: string };
 }[] = [
   {
     category: "study_work",
     title: "Study/Work",
+    hint: "Your study/work area",
     rect: { left: "5%", top: "30%", width: "27%", height: "37%" },
   },
   {
     category: "chores",
     title: "Chores",
+    hint: "Do the chores",
     rect: { left: "6%", top: "75%", width: "11%", height: "23%" },
   },
   {
     category: "health",
     title: "Health",
+    hint: "Let's be healthy",
     rect: { left: "73%", top: "88%", width: "11%", height: "10%" },
   },
   {
     category: "people",
     title: "People",
+    hint: "Let's connect!",
     rect: { left: "52%", top: "80%", width: "14%", height: "13%" },
   },
 ];
@@ -221,7 +226,7 @@ export default function RoomPage({ onCustomize }: RoomPageProps) {
   return (
     <div className="flex min-h-[calc(100dvh-3.5rem)] flex-col px-5 py-6 sm:min-h-[calc(100dvh-4rem)] sm:px-8 sm:py-8">
       <div className="mx-auto flex w-full max-w-[1680px] flex-1 flex-col">
-        <header className="relative mb-4 text-center">
+        <header className="relative mb-4 pr-24 text-left sm:pr-0 sm:text-center">
           <div className="absolute right-0 top-0">
             <GoogleSignIn />
           </div>
@@ -234,30 +239,48 @@ export default function RoomPage({ onCustomize }: RoomPageProps) {
         </header>
 
         {/* room area — targets roughly 2/3 of the page's available height */}
-        <div className="flex flex-[2] items-center justify-center overflow-hidden">
+        <div className="flex flex-[3] items-center justify-center overflow-hidden sm:flex-[2]">
           <div
             ref={roomRef}
             className="relative aspect-[4/5] max-h-full w-full overflow-hidden rounded-[2.5rem] border border-line bg-paper-card shadow-[0_20px_60px_rgba(51,40,31,0.12)] sm:aspect-[16/9]"
           >
             <RoomBackdrop />
 
-            {ZONES.map(({ category, title, rect }) => (
-              <button
+            {ZONES.map(({ category, title, hint, rect }) => (
+              <motion.button
                 key={category}
                 type="button"
-                aria-label={`${title} — check status and add a task`}
+                aria-label={`${title} — ${hint}. Tap to check status and add a task`}
                 onMouseEnter={() => setHoveredZone(category)}
                 onMouseLeave={() => setHoveredZone((z) => (z === category ? null : z))}
                 onFocus={() => setHoveredZone(category)}
                 onBlur={() => setHoveredZone((z) => (z === category ? null : z))}
                 onClick={() => openTaskModal(category)}
-                className={`focus-ring absolute rounded-2xl transition-colors ${
+                animate={
                   hoveredZone === category
-                    ? "bg-white/20 ring-2 ring-white/70"
-                    : "bg-transparent"
+                    ? { opacity: 1 }
+                    : { opacity: [0.35, 0.8, 0.35] }
+                }
+                transition={
+                  hoveredZone === category
+                    ? { duration: 0.15 }
+                    : { duration: 2.6, repeat: Infinity, ease: "easeInOut" }
+                }
+                className={`focus-ring absolute flex items-start justify-center rounded-2xl ring-2 transition-colors ${
+                  hoveredZone === category
+                    ? "bg-white/20 ring-white/70"
+                    : "bg-white/5 ring-white/35"
                 }`}
                 style={rect}
-              />
+              >
+                <span
+                  className={`pointer-events-none mt-1 w-max max-w-[6.5rem] whitespace-normal text-balance rounded-xl border border-line bg-paper-card/95 px-2 py-1 text-center font-display text-[0.55rem] font-semibold leading-tight text-ink shadow-sm transition-opacity sm:max-w-none sm:whitespace-nowrap sm:rounded-full sm:text-[0.65rem] ${
+                    hoveredZone === category ? "opacity-100" : "opacity-85"
+                  }`}
+                >
+                  {hint}
+                </span>
+              </motion.button>
             ))}
 
             <motion.button
