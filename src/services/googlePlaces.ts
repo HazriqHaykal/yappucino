@@ -70,7 +70,118 @@ const RELIGIOUS_PLACE_TYPES = new Set([
   "place_of_worship",
 ]);
 
-async function searchNearbyByTypes(
+function mapRawPlaces(rawPlaces: Record<string, unknown>[]): PlaceOption[] {
+  return rawPlaces
+    .filter((place) => {
+      const types = (place.types as string[] | undefined) ?? [];
+      const primaryType = place.primaryType as string | undefined;
+      const isReligious =
+        (primaryType && RELIGIOUS_PLACE_TYPES.has(primaryType)) ||
+        types.some((t) => RELIGIOUS_PLACE_TYPES.has(t));
+      if (isReligious) {
+        console.log(
+          "[googlePlaces] filtered out religious place:",
+          (place.displayName as { text?: string } | undefined)?.text,
+        );
+      }
+      return !isReligious;
+    })
+    .map((place) => {
+      const displayName = place.displayName as { text?: string } | undefined;
+      const location = place.location as
+        | { latitude?: number; longitude?: number }
+        | undefined;
+      const types = place.types as string[] | undefined;
+
+      return {
+        id: place.id as string | undefined,
+        name: displayName?.text ?? "Unnamed place",
+        type: (place.primaryType as string) ?? types?.[0] ?? "place",
+        lat: location?.latitude,
+        lng: location?.longitude,
+      };
+    })
+    .filter(
+      (place): place is PlaceOption =>
+        typeof place.id === "string" &&
+        typeof place.lat === "number" &&
+        typeof place.lng === "number",
+    );
+}
+
+// Shared POST + timeout + error-logging plumbing for both the enum-based
+// Nearby Search below and the free-text Text Search used by the therapy
+// flow — the response shape (a `places` array of the same fields) is
+// identical either way, only the request body differs.
+async function postPlacesSearch(
+  url: string,
+  apiKey: string,
+  requestBody: Record<string, unknown>,
+  logLabel: unknown,
+): Promise<PlaceOption[]> {
+  console.log("[googlePlaces] >>> request:", logLabel, requestBody);
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), PLACES_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-Goog-Api-Key": apiKey,
+        "X-Goog-FieldMask":
+          "places.id,places.displayName,places.types,places.primaryType,places.location",
+      },
+      body: JSON.stringify(requestBody),
+      signal: controller.signal,
+    });
+
+    console.log(
+      "[googlePlaces] <<< response status for",
+      logLabel,
+      "|",
+      response.status,
+      response.statusText,
+    );
+
+    if (!response.ok) {
+      const errorBody = await response.text().catch(() => "<unreadable body>");
+      console.error(
+        "[googlePlaces] search failed for",
+        logLabel,
+        "| key used: VITE_GOOGLE_PLACES_API_KEY (prefix",
+        `${apiKey.slice(0, 6)}…)`,
+        "| status:",
+        response.status,
+        "| body:",
+        errorBody,
+      );
+      return [];
+    }
+
+    const data = await response.json();
+    console.log("[googlePlaces] <<< raw response body for", logLabel, "|", data);
+
+    const rawPlaces: Record<string, unknown>[] = Array.isArray(data.places)
+      ? data.places
+      : [];
+
+    return mapRawPlaces(rawPlaces);
+  } catch (err) {
+    console.error(
+      "[googlePlaces] search threw for",
+      logLabel,
+      "| key used: VITE_GOOGLE_PLACES_API_KEY | error:",
+      err,
+    );
+    return [];
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function searchNearbyByTypes(
   coords: Coordinates,
   apiKey: string,
   includedTypes: string[],
@@ -88,101 +199,7 @@ async function searchNearbyByTypes(
     },
   };
 
-  console.log("[googlePlaces] >>> searchNearby request:", requestBody);
-
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), PLACES_TIMEOUT_MS);
-
-  try {
-    const response = await fetch(PLACES_SEARCH_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Goog-Api-Key": apiKey,
-        "X-Goog-FieldMask":
-          "places.id,places.displayName,places.types,places.primaryType,places.location",
-      },
-      body: JSON.stringify(requestBody),
-      signal: controller.signal,
-    });
-
-    console.log(
-      "[googlePlaces] <<< response status for",
-      includedTypes,
-      "|",
-      response.status,
-      response.statusText,
-    );
-
-    if (!response.ok) {
-      const errorBody = await response.text().catch(() => "<unreadable body>");
-      console.error(
-        "[googlePlaces] searchNearby failed for",
-        includedTypes,
-        "| key used: VITE_GOOGLE_PLACES_API_KEY (prefix",
-        `${apiKey.slice(0, 6)}…)`,
-        "| status:",
-        response.status,
-        "| body:",
-        errorBody,
-      );
-      return [];
-    }
-
-    const data = await response.json();
-    console.log("[googlePlaces] <<< raw response body for", includedTypes, "|", data);
-
-    const rawPlaces: Record<string, unknown>[] = Array.isArray(data.places)
-      ? data.places
-      : [];
-
-    return rawPlaces
-      .filter((place) => {
-        const types = (place.types as string[] | undefined) ?? [];
-        const primaryType = place.primaryType as string | undefined;
-        const isReligious =
-          (primaryType && RELIGIOUS_PLACE_TYPES.has(primaryType)) ||
-          types.some((t) => RELIGIOUS_PLACE_TYPES.has(t));
-        if (isReligious) {
-          console.log(
-            "[googlePlaces] filtered out religious place:",
-            (place.displayName as { text?: string } | undefined)?.text,
-          );
-        }
-        return !isReligious;
-      })
-      .map((place) => {
-        const displayName = place.displayName as { text?: string } | undefined;
-        const location = place.location as
-          | { latitude?: number; longitude?: number }
-          | undefined;
-        const types = place.types as string[] | undefined;
-
-        return {
-          id: place.id as string | undefined,
-          name: displayName?.text ?? "Unnamed place",
-          type: (place.primaryType as string) ?? types?.[0] ?? "place",
-          lat: location?.latitude,
-          lng: location?.longitude,
-        };
-      })
-      .filter(
-        (place): place is PlaceOption =>
-          typeof place.id === "string" &&
-          typeof place.lat === "number" &&
-          typeof place.lng === "number",
-      );
-  } catch (err) {
-    console.error(
-      "[googlePlaces] searchNearby threw for",
-      includedTypes,
-      "| key used: VITE_GOOGLE_PLACES_API_KEY | error:",
-      err,
-    );
-    return [];
-  } finally {
-    clearTimeout(timeoutId);
-  }
+  return postPlacesSearch(PLACES_SEARCH_URL, apiKey, requestBody, includedTypes);
 }
 
 /**
@@ -223,51 +240,7 @@ export async function fetchRecoveryPlaceCandidates(
   return merged;
 }
 
-// Mental-health professionals are far sparser than cafes/parks, so this
-// searches a wider radius than the recovery flow above.
-const THERAPY_SEARCH_RADIUS_METERS = 10000;
-const THERAPY_RESULTS_PER_GROUP = 8;
-const THERAPY_TYPE_GROUPS: string[][] = [["psychologist"]];
-
-/**
- * Same shape as fetchRecoveryPlaceCandidates, but searches for nearby
- * psychologists/counseling practices for the Therapy tab's "find support"
- * flow. Returns null only if nothing usable came back at all.
- */
-export async function fetchTherapyPlaceCandidates(
-  coords: Coordinates,
-): Promise<PlaceOption[] | null> {
-  const apiKey = import.meta.env.VITE_GOOGLE_PLACES_API_KEY;
-  if (!apiKey) {
-    console.warn("[googlePlaces] no VITE_GOOGLE_PLACES_API_KEY configured");
-    return null;
-  }
-
-  const resultsByGroup = await Promise.all(
-    THERAPY_TYPE_GROUPS.map((types) =>
-      searchNearbyByTypes(
-        coords,
-        apiKey,
-        types,
-        THERAPY_SEARCH_RADIUS_METERS,
-        THERAPY_RESULTS_PER_GROUP,
-      ),
-    ),
-  );
-
-  const seenIds = new Set<string>();
-  const merged: PlaceOption[] = [];
-  for (const place of resultsByGroup.flat()) {
-    if (seenIds.has(place.id)) continue;
-    seenIds.add(place.id);
-    merged.push(place);
-  }
-
-  if (merged.length === 0) {
-    console.warn("[googlePlaces] no usable therapy places found nearby");
-    return null;
-  }
-
-  console.log(`[googlePlaces] merged ${merged.length} therapy candidate(s):`, merged);
-  return merged;
-}
+// Nearby real psychologists/counseling practices for the Therapy tab used
+// to live here too, but that's now generated data (see
+// mockTherapyPlaces.ts) rather than a real Places API lookup — this
+// prototype doesn't need real practice listings.

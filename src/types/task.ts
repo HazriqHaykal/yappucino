@@ -58,8 +58,10 @@ export interface TherapySuggestion {
   userId: string;
   placeName: string;
   placeType: string;
-  lat: number;
-  lng: number;
+  address: string;
+  phone?: string;
+  rating?: number;
+  hours?: string;
   reasoning: string;
   contacted: boolean;
   contactedAt?: string;

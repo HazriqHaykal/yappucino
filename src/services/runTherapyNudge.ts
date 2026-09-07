@@ -1,14 +1,10 @@
 import { getRecentCheckIns } from "./checkIn";
-import {
-  fetchTherapyPlaceCandidates,
-  getCurrentPositionOrFallback,
-  PlaceOption,
-} from "./googlePlaces";
+import { getMockTherapyPlaces, TherapyPlace } from "./mockTherapyPlaces";
 import { currentUserId } from "../store/useTaskStore";
 import { useTherapyStore } from "../store/useTherapyStore";
 import type { TherapySuggestion } from "../types/task";
 
-const SYSTEM_PROMPT = `You are a caring assistant helping a university student who may be feeling stressed find real nearby professional support. Given several nearby real places (name, type — psychologists/counseling practices) and a brief note on their recent mood check-ins, choose the best 1-3 options and for each write one short, warm, non-clinical sentence on why reaching out could help. Never diagnose or give therapeutic advice yourself — you are only helping them pick where to go. If the note suggests something urgent, still just recommend real nearby places calmly; this app is not a crisis line. Respond ONLY with JSON: {"suggestions": [{"chosenPlaceName": string, "reasoning": string}]}`;
+const SYSTEM_PROMPT = `You are a caring assistant helping a university student who may be feeling stressed find professional support in Malaysia. Given several real counseling/psychology practices (name, type, and a short description) and a brief note on their recent mood check-ins, choose the best 1-3 options and for each write one short, warm, non-clinical sentence on why reaching out could help. Never diagnose or give therapeutic advice yourself — you are only helping them pick where to go. If the note suggests something urgent, still just recommend nearby places calmly; this app is not a crisis line. Respond ONLY with JSON: {"suggestions": [{"chosenPlaceName": string, "reasoning": string}]}`;
 
 const GEMINI_MODEL = "gemini-flash-lite-latest";
 const TIMEOUT_MS = 10000;
@@ -16,8 +12,8 @@ const RECENT_DAYS = 7;
 
 function matchChosenPlace(
   chosenPlaceName: string,
-  places: PlaceOption[],
-): PlaceOption | null {
+  places: TherapyPlace[],
+): TherapyPlace | null {
   const exact = places.find((p) => p.name === chosenPlaceName);
   if (exact) return exact;
 
@@ -48,22 +44,15 @@ async function buildMoodSummary(userId: string | null): Promise<string> {
 }
 
 /**
- * Full therapy-nudge flow: get location (or the silent fallback), find
- * nearby psychologists/counseling practices, ask Gemini to pick 1-3 given
- * the user's recent mood check-ins, and write the resulting suggestions
- * into useTherapyStore. Returns null only if nothing usable came back at
- * all — never throws.
+ * Full therapy-nudge flow: ask Gemini to pick 1-3 of the curated Malaysian
+ * counseling/psychology practices given the user's recent mood check-ins,
+ * and write the resulting suggestions into useTherapyStore. Returns null
+ * only if nothing usable came back at all — never throws.
  */
 export async function runTherapyNudge(
   userId: string | null,
 ): Promise<TherapySuggestion[] | null> {
-  const coords = await getCurrentPositionOrFallback();
-
-  const places = await fetchTherapyPlaceCandidates(coords);
-  if (!places) {
-    console.error("[runTherapyNudge] FALLBACK TRIGGERED (no places found)");
-    return null;
-  }
+  const places = getMockTherapyPlaces();
 
   const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
   if (!apiKey) {
@@ -81,7 +70,7 @@ export async function runTherapyNudge(
         parts: [
           {
             text: JSON.stringify({
-              places: places.map((p) => ({ name: p.name, type: p.type })),
+              places: places.map((p) => ({ name: p.name, type: p.type, description: p.blurb })),
               moodSummary,
             }),
           },
@@ -175,8 +164,10 @@ export async function runTherapyNudge(
         userId: currentUserId(),
         placeName: matchedPlace.name,
         placeType: matchedPlace.type,
-        lat: matchedPlace.lat,
-        lng: matchedPlace.lng,
+        address: matchedPlace.address,
+        phone: matchedPlace.phone,
+        rating: matchedPlace.rating,
+        hours: matchedPlace.hours,
         reasoning,
         contacted: false,
       });

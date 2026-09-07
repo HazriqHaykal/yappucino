@@ -301,11 +301,19 @@ export default function RoomPage({ onCustomize }: RoomPageProps) {
                   ? { duration: 0.15 }
                   : { duration: 2.4, repeat: Infinity, ease: "easeInOut" }
               }
-              className={`focus-ring absolute rounded-xl ring-2 ${
+              className={`focus-ring absolute flex items-end justify-center rounded-xl ring-2 ${
                 isCalendarHovered ? "bg-white/20 ring-white/70" : "bg-white/10 ring-white/40"
               }`}
               style={{ left: "44%", top: "15%", width: "7%", height: "13.3%" }}
-            />
+            >
+              <span
+                className={`pointer-events-none mb-1 w-max max-w-[6.5rem] whitespace-normal text-balance rounded-xl border border-line bg-paper-card/95 px-2 py-1 text-center font-display text-[0.55rem] font-semibold leading-tight text-ink shadow-sm transition-opacity sm:max-w-none sm:whitespace-nowrap sm:rounded-full sm:text-[0.65rem] ${
+                  isCalendarHovered ? "opacity-100" : "opacity-85"
+                }`}
+              >
+                See your week
+              </span>
+            </motion.button>
 
             <div
               aria-hidden="true"

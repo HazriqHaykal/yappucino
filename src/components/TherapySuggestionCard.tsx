@@ -14,18 +14,35 @@ export default function TherapySuggestionCard({
   suggestion,
   onMarkContacted,
 }: TherapySuggestionCardProps) {
-  const { placeName, placeType, reasoning, lat, lng, contacted } = suggestion;
+  const { placeName, placeType, address, phone, rating, hours, reasoning, contacted } =
+    suggestion;
 
+  const mapQuery = `${placeName}, ${address}`;
   const embedSrc = MAPS_EMBED_API_KEY
-    ? `https://www.google.com/maps/embed/v1/place?key=${MAPS_EMBED_API_KEY}&q=${encodeURIComponent(placeName)}`
+    ? `https://www.google.com/maps/embed/v1/place?key=${MAPS_EMBED_API_KEY}&q=${encodeURIComponent(mapQuery)}`
     : null;
-  const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+  const directionsHref = `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(mapQuery)}`;
 
   return (
     <div className="w-full max-w-md rounded-2xl border border-line bg-paper-card p-3 shadow-flat">
-      <p className="font-display text-sm font-semibold text-ink">{placeName}</p>
-      <p className="mb-2 text-xs uppercase tracking-wide text-ink-faint">{placeType}</p>
-      <p className="mb-2 text-sm text-ink-soft">{reasoning}</p>
+      <div className="mb-1 flex items-start justify-between gap-2">
+        <p className="font-display text-sm font-semibold text-ink">{placeName}</p>
+        {rating !== undefined && (
+          <span className="shrink-0 font-display text-xs font-semibold text-clay-dark">
+            ★ {rating.toFixed(1)}
+          </span>
+        )}
+      </div>
+      <p className="text-xs uppercase tracking-wide text-ink-faint">{placeType}</p>
+      <p className="mt-1 text-xs text-ink-faint">{address}</p>
+      {(phone || hours) && (
+        <p className="mt-1 text-xs text-ink-faint">
+          {phone}
+          {phone && hours ? " · " : ""}
+          {hours}
+        </p>
+      )}
+      <p className="mb-2 mt-2 text-sm text-ink-soft">{reasoning}</p>
 
       {embedSrc ? (
         <iframe
