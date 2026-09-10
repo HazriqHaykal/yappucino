@@ -1,13 +1,13 @@
 import type { ComponentType } from "react";
 import { ClipboardIcon, HeartHandIcon, HomeIcon, UsersIcon } from "./icons";
 
-export type Tab = "room" | "tasks" | "community" | "therapy";
+export type Tab = "room" | "tasks" | "community" | "support";
 
 const TABS: { id: Tab; label: string; Icon: ComponentType<{ className?: string }> }[] = [
   { id: "room", label: "Room", Icon: HomeIcon },
   { id: "tasks", label: "Tasks", Icon: ClipboardIcon },
   { id: "community", label: "Community", Icon: UsersIcon },
-  { id: "therapy", label: "Therapy", Icon: HeartHandIcon },
+  { id: "support", label: "Support", Icon: HeartHandIcon },
 ];
 
 interface NavBarProps {

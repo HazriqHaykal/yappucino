@@ -5,8 +5,8 @@ import TaskInputModal from "./components/TaskInputModal";
 import CommunityPage from "./pages/CommunityPage";
 import LandingPage from "./pages/LandingPage";
 import RoomPage from "./pages/RoomPage";
+import SupportPage from "./pages/SupportPage";
 import TasksPage from "./pages/TasksPage";
-import TherapyPage from "./pages/TherapyPage";
 
 type Screen = "landing" | "room" | "character";
 
@@ -40,7 +40,7 @@ function App() {
         {activeTab === "room" && <RoomPage onCustomize={() => setScreen("character")} />}
         {activeTab === "tasks" && <TasksPage />}
         {activeTab === "community" && <CommunityPage />}
-        {activeTab === "therapy" && <TherapyPage />}
+        {activeTab === "support" && <SupportPage onNavigate={setActiveTab} />}
       </div>
       <NavBar active={activeTab} onChange={setActiveTab} />
       <TaskInputModal />

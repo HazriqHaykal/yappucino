@@ -254,6 +254,128 @@ export function HeartIcon({ className = "", filled = false }: IconProps & { fill
   );
 }
 
+export function SmileFaceIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8.3 13.3c.9 1.3 2.1 2 3.7 2s2.8-.7 3.7-2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="9" cy="10" r="0.9" fill="currentColor" />
+      <circle cx="15" cy="10" r="0.9" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function NeutralFaceIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M8.3 14.2h7.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <circle cx="9" cy="10" r="0.9" fill="currentColor" />
+      <circle cx="15" cy="10" r="0.9" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function TiredFaceIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M9.2 14.5c.7-.6 1.7-.9 2.8-.9s2.1.3 2.8.9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M7.6 10.2c.5-.4 1.1-.6 1.6-.6M14.8 9.6c.5 0 1.1.2 1.6.6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function StressedFaceIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M9 14.8c.8-.8 1.9-1.2 3-1.2s2.2.4 3 1.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M7.5 9.3l2-.9M16.5 9.3l-2-.9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function OverwhelmedFaceIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+      <ellipse cx="12" cy="15" rx="1.6" ry="1.2" stroke="currentColor" strokeWidth="1.4" />
+      <path d="M7.3 8.6a1.2 1.2 0 1 0 2.4 0 1.2 1.2 0 0 0-2.4 0Z" stroke="currentColor" strokeWidth="1.3" />
+      <path d="M14.3 8.6a1.2 1.2 0 1 0 2.4 0 1.2 1.2 0 0 0-2.4 0Z" stroke="currentColor" strokeWidth="1.3" />
+    </svg>
+  );
+}
+
+export function BreathIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="2.6" stroke="currentColor" strokeWidth="1.6" />
+      <circle cx="12" cy="12" r="5.6" stroke="currentColor" strokeWidth="1.4" opacity="0.6" />
+      <circle cx="12" cy="12" r="8.6" stroke="currentColor" strokeWidth="1.2" opacity="0.35" />
+    </svg>
+  );
+}
+
+export function WaterDropIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <path
+        d="M12 3.8c2.8 3.6 6 7.7 6 11.1 0 3.3-2.7 6-6 6s-6-2.7-6-6c0-3.4 3.2-7.5 6-11.1Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path d="M9.5 15.5c0 1.3 1 2.2 2.2 2.2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function ScreenOffIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <rect x="3.5" y="5" width="17" height="12" rx="2" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M9 20.5h6M12 17v3.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M7.5 8.5l9 5M16.5 8.5l-9 5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity="0.75" />
+    </svg>
+  );
+}
+
+export function StretchIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="12" cy="4.6" r="1.9" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M12 8v5.5M12 8 6.5 5.2M12 8l5.5-2.8M12 13.5 8 20M12 13.5 16 20"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function MindfulnessIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="12" cy="5.6" r="1.9" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M12 8v3.3M12 11.3c-2.2 1.6-3.6 1.1-4.6-.3M12 11.3c2.2 1.6 3.6 1.1 4.6-.3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="M6 18c1.2-2.4 3.6-3.4 6-3.4s4.8 1 6 3.4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
 export function GearIcon({ className = "" }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
