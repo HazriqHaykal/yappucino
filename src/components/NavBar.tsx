@@ -1,12 +1,12 @@
 import type { ComponentType } from "react";
-import { ClipboardIcon, HeartHandIcon, HomeIcon, LeafIcon } from "./icons";
+import { ClipboardIcon, HeartHandIcon, HomeIcon, UsersIcon } from "./icons";
 
-export type Tab = "room" | "tasks" | "recovery" | "therapy";
+export type Tab = "room" | "tasks" | "community" | "therapy";
 
 const TABS: { id: Tab; label: string; Icon: ComponentType<{ className?: string }> }[] = [
   { id: "room", label: "Room", Icon: HomeIcon },
   { id: "tasks", label: "Tasks", Icon: ClipboardIcon },
-  { id: "recovery", label: "Recovery", Icon: LeafIcon },
+  { id: "community", label: "Community", Icon: UsersIcon },
   { id: "therapy", label: "Therapy", Icon: HeartHandIcon },
 ];
 
@@ -17,16 +17,19 @@ interface NavBarProps {
 
 export default function NavBar({ active, onChange }: NavBarProps) {
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-paper/95 backdrop-blur-sm">
-      <div className="mx-auto flex h-16 max-w-[1680px] items-center gap-1 px-3 pb-[env(safe-area-inset-bottom)] sm:h-20 sm:justify-center sm:gap-2 sm:px-8">
+    <nav
+      className="fixed inset-x-0 bottom-0 z-40 flex justify-center px-4"
+      style={{ paddingBottom: "calc(env(safe-area-inset-bottom) + 0.9rem)" }}
+    >
+      <div className="flex items-center gap-1 rounded-full border border-clay/25 bg-paper-card/95 p-1.5 shadow-pop backdrop-blur-sm sm:gap-1.5 sm:p-2">
         {TABS.map(({ id, label, Icon }) => (
           <button
             key={id}
             type="button"
             onClick={() => onChange(id)}
             aria-current={active === id ? "page" : undefined}
-            className={`focus-ring flex flex-1 flex-col items-center gap-0.5 rounded-xl px-2 py-1.5 transition-colors sm:flex-none sm:px-5 sm:py-2 ${
-              active === id ? "bg-clay/10 text-clay" : "text-ink-soft hover:bg-line-soft"
+            className={`focus-ring flex flex-col items-center gap-0.5 rounded-full px-4 py-2 transition-colors sm:px-6 sm:py-2.5 ${
+              active === id ? "bg-clay-light text-clay-dark" : "text-ink-soft hover:bg-line-soft"
             }`}
           >
             <Icon className="h-5 w-5" />

@@ -1,14 +1,12 @@
-import { GoogleAuthProvider, signInWithPopup, signOut as firebaseSignOut } from "firebase/auth";
-import { auth, googleProvider, isFirebaseConfigured } from "../services/firebase";
+import { signOut as firebaseSignOut } from "firebase/auth";
+import { auth, isFirebaseConfigured } from "../services/firebase";
+import { signInWithGoogle } from "../services/googleAuth";
 import { useAuthStore } from "../store/useAuthStore";
 
 export default function GoogleSignIn() {
   const user = useAuthStore((state) => state.user);
   const isSigningIn = useAuthStore((state) => state.isSigningIn);
   const error = useAuthStore((state) => state.error);
-  const setSigningIn = useAuthStore((state) => state.setSigningIn);
-  const setSession = useAuthStore((state) => state.setSession);
-  const setError = useAuthStore((state) => state.setError);
   const signOut = useAuthStore((state) => state.signOut);
 
   if (!isFirebaseConfigured || !auth) {
@@ -19,30 +17,6 @@ export default function GoogleSignIn() {
       </div>
     );
   }
-
-  const handleSignIn = async () => {
-    if (!auth) return;
-    setSigningIn(true);
-    try {
-      const result = await signInWithPopup(auth, googleProvider);
-      // Calendar read scope was requested alongside sign-in (see
-      // services/firebase.ts) — this credential carries the OAuth access
-      // token for it, separate from the Firebase Auth session itself.
-      const credential = GoogleAuthProvider.credentialFromResult(result);
-      setSession(
-        {
-          id: result.user.uid,
-          name: result.user.displayName ?? "there",
-          email: result.user.email ?? "",
-          pictureUrl: result.user.photoURL ?? undefined,
-        },
-        credential?.accessToken ?? null,
-      );
-    } catch (err) {
-      console.error("[GoogleSignIn] sign-in failed:", err);
-      setError("Google sign-in failed or was cancelled. Please try again.");
-    }
-  };
 
   const handleSignOut = async () => {
     if (auth) await firebaseSignOut(auth);
@@ -82,7 +56,7 @@ export default function GoogleSignIn() {
     <div>
       <button
         type="button"
-        onClick={handleSignIn}
+        onClick={signInWithGoogle}
         disabled={isSigningIn}
         className="focus-ring rounded-full bg-clay px-4 py-2 font-display text-sm font-semibold text-white transition-colors hover:bg-clay-dark disabled:cursor-not-allowed disabled:opacity-60"
       >

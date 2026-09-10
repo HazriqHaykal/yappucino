@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { fetchUpcomingEvents, mapEventToTaskInput } from "../services/googleCalendar";
+import { signInWithGoogle } from "../services/googleAuth";
 import { inferCalendarTaskAttributes } from "../services/inferCalendarTaskAttributes";
 import { useAuthStore } from "../store/useAuthStore";
 import { useTaskStore } from "../store/useTaskStore";
 import type { CalendarImportInput } from "../store/useTaskStore";
+import { CalendarIcon, CheckCircleIcon } from "./icons";
 
 /**
  * Enriches one imported event with a Gemini-inferred category, priority,
@@ -53,9 +55,14 @@ async function resolveImportAttributes(
 
 // Calendar access now comes from the same OAuth consent as GoogleSignIn
 // (one combined sign-in flow instead of a separate connect step) — this
-// component just uses whatever access token that produced.
+// component just uses whatever access token that produced. Styled to match
+// the "University sync" banner right above it on the Tasks page: same
+// bordered-card layout, a pill button that flips to a success badge once
+// connected.
 export default function GoogleCalendarSync() {
   const accessToken = useAuthStore((state) => state.accessToken);
+  const isSigningIn = useAuthStore((state) => state.isSigningIn);
+  const authError = useAuthStore((state) => state.error);
   const importCalendarTasks = useTaskStore((state) => state.importCalendarTasks);
 
   const [isSyncing, setIsSyncing] = useState(false);
@@ -80,7 +87,7 @@ export default function GoogleCalendarSync() {
 
       setMessage(
         skippedCount > 0
-          ? `Imported ${addedCount} new events from your calendar (${skippedCount} already synced).`
+          ? `Imported ${addedCount} new events (${skippedCount} already synced).`
           : `Imported ${addedCount} events from your calendar.`,
       );
     } catch (err) {
@@ -102,26 +109,55 @@ export default function GoogleCalendarSync() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [accessToken]);
 
-  if (!accessToken) {
-    return (
-      <div className="rounded-2xl border border-line bg-paper-card p-4 text-sm text-ink-faint shadow-flat">
-        Sign in with Google above to sync your calendar.
-      </div>
-    );
-  }
-
   return (
-    <div className="rounded-2xl border border-line bg-paper-card p-4 shadow-flat">
-      <button
-        type="button"
-        onClick={runSync}
-        disabled={isSyncing}
-        className="focus-ring rounded-full bg-clay px-4 py-2 font-display text-sm font-semibold text-white transition-colors hover:bg-clay-dark disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {isSyncing ? "Syncing…" : "Sync Google Calendar"}
-      </button>
-      {message && <p className="mt-2 text-sm text-mint-shade">{message}</p>}
-      {error && <p className="mt-2 text-sm text-clay-dark">{error}</p>}
+    <div className="rounded-2xl border border-line bg-paper-card p-4 shadow-flat sm:p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-mint/30 text-mint-shade">
+            <CalendarIcon className="h-5 w-5" />
+          </span>
+          <div>
+            <p className="font-display text-sm font-semibold text-ink">Google Calendar sync</p>
+            <p className="mt-0.5 max-w-md text-sm text-ink-soft">
+              Connect your Google Calendar to automatically import events, deadlines and class
+              schedules as tasks.
+            </p>
+          </div>
+        </div>
+
+        {accessToken ? (
+          <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-mint/25 px-3.5 py-1.5 font-display text-xs font-semibold text-mint-shade">
+            <CheckCircleIcon className="h-4 w-4" />
+            Connected
+          </span>
+        ) : (
+          <button
+            type="button"
+            onClick={signInWithGoogle}
+            disabled={isSigningIn}
+            className="focus-ring shrink-0 rounded-full bg-clay px-4 py-2 font-display text-xs font-semibold text-white transition-colors hover:bg-clay-dark disabled:cursor-not-allowed disabled:opacity-60 sm:text-sm"
+          >
+            {isSigningIn ? "Connecting…" : "Connect"}
+          </button>
+        )}
+      </div>
+
+      {accessToken && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 border-t border-line-soft pt-3">
+          <button
+            type="button"
+            onClick={runSync}
+            disabled={isSyncing}
+            className="focus-ring rounded-full border border-line px-3 py-1 text-xs font-semibold text-ink-soft transition-colors hover:border-clay hover:text-clay-dark disabled:opacity-50"
+          >
+            {isSyncing ? "Syncing…" : "Sync now"}
+          </button>
+          {message && <p className="text-xs text-mint-shade">{message}</p>}
+          {error && <p className="text-xs text-clay-dark">{error}</p>}
+        </div>
+      )}
+
+      {!accessToken && authError && <p className="mt-2 text-xs text-clay-dark">{authError}</p>}
     </div>
   );
 }

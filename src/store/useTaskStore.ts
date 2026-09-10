@@ -43,6 +43,9 @@ interface TaskStore {
   /** Increments deferCount and optionally moves dueAt out to deferUntil.
    * Status stays "active" — deferring isn't completing or abandoning it. */
   deferTask: (taskId: string, deferUntil?: string) => void;
+  /** Toggles between "active" and "completed", setting/clearing completedAt
+   * to match. Drives the Tasks page's completion checkbox. */
+  toggleTaskComplete: (taskId: string) => void;
 }
 
 export const useTaskStore = create<TaskStore>((set, get) => ({
@@ -142,6 +145,17 @@ export const useTaskStore = create<TaskStore>((set, get) => ({
               deferCount: task.deferCount + 1,
               dueAt: deferUntil ?? task.dueAt,
             }
+          : task,
+      ),
+    })),
+
+  toggleTaskComplete: (taskId) =>
+    set((state) => ({
+      tasks: state.tasks.map((task) =>
+        task.id === taskId
+          ? task.status === "completed"
+            ? { ...task, status: "active", completedAt: undefined }
+            : { ...task, status: "completed", completedAt: new Date().toISOString() }
           : task,
       ),
     })),

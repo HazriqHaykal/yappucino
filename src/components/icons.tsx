@@ -226,3 +226,192 @@ export function HeartHandIcon({ className = "" }: IconProps) {
     </svg>
   );
 }
+
+export function UserIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="12" cy="8.2" r="3.2" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M5.5 19c.9-3.4 3.3-5.3 6.5-5.3s5.6 1.9 6.5 5.3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function HeartIcon({ className = "", filled = false }: IconProps & { filled?: boolean }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill={filled ? "currentColor" : "none"} aria-hidden="true">
+      <path
+        d="M12 19.3c-4.1-2.6-7.5-5.7-7.5-9.3 0-2.5 1.9-4.3 4.3-4.3 1.4 0 2.6.7 3.2 1.7.6-1 1.8-1.7 3.2-1.7 2.4 0 4.3 1.8 4.3 4.3 0 3.6-3.4 6.7-7.5 9.3Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function GearIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="3" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M12 3.5v2.2M12 18.3v2.2M20.5 12h-2.2M5.7 12H3.5M17.7 6.3l-1.55 1.55M7.85 16.15 6.3 17.7M17.7 17.7l-1.55-1.55M7.85 7.85 6.3 6.3"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function HelpCircleIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="12" cy="12" r="8.5" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M9.6 9.3c.2-1.3 1.2-2.1 2.5-2.1 1.4 0 2.5.9 2.5 2.1 0 1.6-2.4 1.7-2.4 3.6"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <circle cx="12" cy="16.6" r="1" fill="currentColor" />
+    </svg>
+  );
+}
+
+export function UsersIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="9" cy="8.3" r="2.8" stroke="currentColor" strokeWidth="1.6" />
+      <path
+        d="M3.8 18.3c.5-2.8 2.6-4.4 5.2-4.4s4.7 1.6 5.2 4.4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="M15.2 6.1c1.3.3 2.3 1.4 2.3 2.9 0 1.4-.9 2.5-2.1 2.9M17.3 13.9c1.9.5 3.2 1.9 3.6 4"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+export function BasketIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <path
+        d="M4.5 10.5h15l-1.6 8.2a1.6 1.6 0 0 1-1.57 1.3H7.67a1.6 1.6 0 0 1-1.57-1.3L4.5 10.5Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M8.2 10.5 9 5.5m6.8 5-.8-5M3.2 10.5h17.6"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M10.3 13.5v4.2M13.7 13.5v4.2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function SparkleIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <path
+        d="M12 4.5c.4 2.8 1.3 4.4 4.2 5.2-2.9.8-3.8 2.4-4.2 5.2-.4-2.8-1.3-4.4-4.2-5.2 2.9-.8 3.8-2.4 4.2-5.2Z"
+        fill="currentColor"
+      />
+      <path
+        d="M18.3 14.5c.2 1.4.7 2.2 2.1 2.6-1.4.4-1.9 1.2-2.1 2.6-.2-1.4-.7-2.2-2.1-2.6 1.4-.4 1.9-1.2 2.1-2.6Z"
+        fill="currentColor"
+      />
+    </svg>
+  );
+}
+
+export function MapPinIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <path
+        d="M12 21s6.5-6.1 6.5-11A6.5 6.5 0 0 0 5.5 10c0 4.9 6.5 11 6.5 11Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <circle cx="12" cy="10" r="2.4" stroke="currentColor" strokeWidth="1.6" />
+    </svg>
+  );
+}
+
+export function LinkIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <path
+        d="M9.5 14.5 14.5 9.5"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+      />
+      <path
+        d="M11 7.8 12.2 6.6a3.4 3.4 0 0 1 4.8 4.8L15.8 12.6M13 16.2l-1.2 1.2a3.4 3.4 0 0 1-4.8-4.8l1.2-1.2"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+export function PlusIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function CoffeeIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <path
+        d="M5 9.5h11v5.2a4 4 0 0 1-4 4H9a4 4 0 0 1-4-4V9.5Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path
+        d="M16 11h1.4a2.1 2.1 0 0 1 0 4.2H16"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path d="M8 6.3c0-.8.9-1 .9-1.8M11.5 6.3c0-.8.9-1 .9-1.8" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+export function WalkIcon({ className = "" }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" aria-hidden="true">
+      <circle cx="13.3" cy="4.8" r="1.6" fill="currentColor" />
+      <path
+        d="M11 8.2 8.6 11l1 3.4-3 5.4M11 8.2l3.4.6 2.6 2.7M13.5 13l3.3 1.5-1 4.9M8.6 11l3.6 1"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}

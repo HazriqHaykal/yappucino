@@ -46,7 +46,7 @@ export default function LandingPage({ onGetStarted, onSkip }: LandingPageProps) 
             A calmer way to carry your week
           </h1>
           <p className="mt-3 text-sm text-ink-soft sm:text-base">
-            Turn your to-dos into a room you actually want to tend. Begentle
+            Turn your to-dos into a room you actually want to tend. Gentle
             nudges instead of guilt, one small step at a time.
           </p>
         </div>

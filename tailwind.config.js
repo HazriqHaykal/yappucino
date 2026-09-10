@@ -24,6 +24,9 @@ export default {
         "peach-shade": "#E4936A",
         yellow: "#F6D889",
         "yellow-shade": "#E9BE55",
+        red: "#EF4444",
+        "red-shade": "#DC2626",
+        "red-light": "#FEE2E2",
       },
       fontFamily: {
         display: ["Quicksand", "Nunito", "sans-serif"],

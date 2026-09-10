@@ -2,8 +2,8 @@ import { useState } from "react";
 import CharacterCustomization from "./components/CharacterCustomization";
 import NavBar, { type Tab } from "./components/NavBar";
 import TaskInputModal from "./components/TaskInputModal";
+import CommunityPage from "./pages/CommunityPage";
 import LandingPage from "./pages/LandingPage";
-import RecoveryPage from "./pages/RecoveryPage";
 import RoomPage from "./pages/RoomPage";
 import TasksPage from "./pages/TasksPage";
 import TherapyPage from "./pages/TherapyPage";
@@ -36,10 +36,10 @@ function App() {
 
   return (
     <>
-      <div className="pb-16 sm:pb-20">
+      <div className="pb-24 sm:pb-28">
         {activeTab === "room" && <RoomPage onCustomize={() => setScreen("character")} />}
         {activeTab === "tasks" && <TasksPage />}
-        {activeTab === "recovery" && <RecoveryPage />}
+        {activeTab === "community" && <CommunityPage />}
         {activeTab === "therapy" && <TherapyPage />}
       </div>
       <NavBar active={activeTab} onChange={setActiveTab} />
