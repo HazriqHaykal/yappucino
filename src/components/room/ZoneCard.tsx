@@ -51,9 +51,11 @@ export default function ZoneCard({
         >
           <Icon className="h-4 w-4" />
         </span>
-        <span className="font-display text-sm font-semibold text-ink sm:text-base">{title}</span>
+        <span className="min-w-0 flex-1 truncate font-display text-sm font-semibold text-ink sm:text-base">
+          {title}
+        </span>
         <span
-          className={`ml-auto font-display text-base font-bold sm:text-lg ${
+          className={`shrink-0 font-display text-base font-bold sm:text-lg ${
             state === "dim" ? "text-red-shade" : levelMeta.textClass
           }`}
         >

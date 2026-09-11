@@ -166,9 +166,20 @@ export default function RoomPage({ onCustomize }: RoomPageProps) {
 
   // Measures the room's own height so the ambient speech bubble can be
   // constrained to the band between the top of the room and the buddy —
-  // guarantees no overlap regardless of viewport size or how much text the
-  // bubble holds, instead of guessing at a fixed percentage that only
-  // happens to work at one screen size.
+  // guarantees no overlap with the buddy regardless of viewport size or how
+  // much text the bubble holds.
+  //
+  // Deliberately NOT measured against the calendar hitbox (or any other
+  // in-room element) anymore: that made the bubble's available height
+  // dependent on wherever the calendar happened to be positioned, so any
+  // future move of either element could silently reintroduce an overlap.
+  // The calendar now lives low on the wall (see RoomBackdrop.tsx), well
+  // outside the vertical range this bubble ever needs for a realistic
+  // 2-3 sentence reasoning string — the two are fully decoupled. The
+  // buddy-based cap is generous enough that real content always renders at
+  // its natural height; the floor below is just a sane minimum for the
+  // pathological case of an unexpectedly huge string, so it scrolls
+  // instead of rendering as an unusably tiny sliver.
   useLayoutEffect(() => {
     const GAP = 12;
     const recomputeBubbleBounds = () => {
@@ -179,8 +190,10 @@ export default function RoomPage({ onCustomize }: RoomPageProps) {
       const roomRect = room.getBoundingClientRect();
       const buddyRect = buddy.getBoundingClientRect();
 
-      const top = roomRect.height * 0.14;
-      const maxHeight = Math.max(40, buddyRect.top - roomRect.top - top - GAP);
+      // Start close to the room's top edge — just enough to clear the
+      // rounded corner.
+      const top = Math.min(roomRect.height * 0.03, 16);
+      const maxHeight = Math.max(96, buddyRect.top - roomRect.top - top - GAP);
       setBubbleBounds({ top, maxHeight });
     };
 
@@ -425,7 +438,7 @@ export default function RoomPage({ onCustomize }: RoomPageProps) {
               className={`focus-ring absolute flex items-end justify-center rounded-xl ring-2 ${
                 isCalendarHovered ? "bg-white/20 ring-white/70" : "bg-white/10 ring-white/40"
               }`}
-              style={{ left: "44%", top: "15%", width: "7%", height: "13.3%" }}
+              style={{ left: "44%", top: "38.3%", width: "7%", height: "13.3%" }}
             >
               <span
                 className={`pointer-events-none mb-1 w-max max-w-[6.5rem] whitespace-normal text-balance rounded-xl border border-line bg-paper-card/95 px-2 py-1 text-center font-display text-[0.55rem] font-semibold leading-tight text-ink shadow-sm transition-opacity sm:max-w-none sm:whitespace-nowrap sm:rounded-full sm:text-[0.65rem] ${

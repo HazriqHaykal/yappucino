@@ -137,25 +137,30 @@ export default function RoomBackdrop() {
         <rect x="18" y="36" width="26" height="22" rx="3" fill="#33281f" filter="url(#softShadow)" />
         <rect x="21" y="39" width="20" height="16" rx="2" fill="url(#screenGrad)" />
 
-        {/* wall calendar — opens the Weekly Recap; sits in the open wall
-            space between the shelf (ends x≈66) and the window (starts x≈133) */}
+        {/* wall calendar — opens the Weekly Recap. Sits in the open wall
+            space between the shelf (ends x≈66) and the window (starts
+            x≈133), low on the wall near the floor line rather than up near
+            the top — this keeps it well clear of the ambient speech
+            bubble's territory (which starts near the room's top edge and
+            grows downward toward the buddy), so a long reasoning string
+            never has to fight this element for space again. */}
         <rect
           x="88"
-          y="18"
+          y="46"
           width="14"
           height="16"
           rx="1.5"
           fill="#fffcf6"
           filter="url(#softShadow)"
         />
-        <rect x="88" y="18" width="14" height="5" rx="1.5" fill="#d9764a" />
-        <circle cx="91.5" cy="16.5" r="0.9" fill="#7a6a5b" />
-        <circle cx="98.5" cy="16.5" r="0.9" fill="#7a6a5b" />
-        <circle cx="91.5" cy="26" r="0.9" fill="#d9764a" />
-        <circle cx="95" cy="26" r="0.9" fill="#a9d4e8" />
-        <circle cx="98.5" cy="26" r="0.9" fill="#a9d4e8" />
-        <circle cx="91.5" cy="30" r="0.9" fill="#a9d4e8" />
-        <circle cx="95" cy="30" r="0.9" fill="#a9d4e8" />
+        <rect x="88" y="46" width="14" height="5" rx="1.5" fill="#d9764a" />
+        <circle cx="91.5" cy="44.5" r="0.9" fill="#7a6a5b" />
+        <circle cx="98.5" cy="44.5" r="0.9" fill="#7a6a5b" />
+        <circle cx="91.5" cy="54" r="0.9" fill="#d9764a" />
+        <circle cx="95" cy="54" r="0.9" fill="#a9d4e8" />
+        <circle cx="98.5" cy="54" r="0.9" fill="#a9d4e8" />
+        <circle cx="91.5" cy="58" r="0.9" fill="#a9d4e8" />
+        <circle cx="95" cy="58" r="0.9" fill="#a9d4e8" />
         <ellipse cx="26" cy="44" rx="4" ry="2" fill="#ffffff" opacity="0.3" />
         <circle cx="41" cy="56" r="1" fill="#a7dcc4" />
 
