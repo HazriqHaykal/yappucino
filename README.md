@@ -117,7 +117,6 @@ AI-powered reasoning explains why a category is overloaded and actively helps st
 
 ## Screens & UI Walkthrough
 
-> Add screenshots to `docs/screenshots/` and update the image paths below.
 
 **Meet Your Buddy — Character Customisation**
 
