@@ -9,7 +9,7 @@ import AIInsightCard from "../components/AIInsightCard";
 import GoogleCalendarSync from "../components/GoogleCalendarSync";
 import PageHeader, { ACCENT_STYLES } from "../components/PageHeader";
 import StickyNote from "../components/StickyNote";
-import { CheckCircleIcon, LinkIcon, SparkleIcon } from "../components/icons";
+import { CheckCircleIcon, SparkleIcon } from "../components/icons";
 
 const STICKY_ROTATIONS = [-3, 2, -2, 3, -1.5];
 const STICKY_COLORS: ("yellow" | "lavender")[] = ["yellow", "lavender"];
@@ -51,7 +51,6 @@ export default function TasksPage() {
   const [rebalanceState, setRebalanceState] = useState<Record<string, RebalanceState>>({});
   const [exitingTaskIds, setExitingTaskIds] = useState<Set<string>>(new Set());
   const [hiddenTaskIds, setHiddenTaskIds] = useState<Set<string>>(new Set());
-  const [isMoodleConnected, setIsMoodleConnected] = useState(false);
 
   const overview = useMemo(() => getWorkloadOverview(tasks), [tasks]);
 
@@ -147,40 +146,6 @@ export default function TasksPage() {
         }
         action={overview.suggestedAction}
       />
-
-      {/* University sync — visual example of a future Moodle/portal
-          integration per the design spec; deliberately local-only, no real
-          backend behind "Connect Moodle". */}
-      <div className="mb-4 rounded-2xl border border-line bg-paper-card p-4 shadow-flat sm:p-5">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div className="flex items-start gap-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-sky/30 text-sky-shade">
-              <LinkIcon className="h-5 w-5" />
-            </span>
-            <div>
-              <p className="font-display text-sm font-semibold text-ink">University sync</p>
-              <p className="mt-0.5 max-w-md text-sm text-ink-soft">
-                Connect your university portal or Moodle to automatically import assignments,
-                deadlines and class activities.
-              </p>
-            </div>
-          </div>
-          {isMoodleConnected ? (
-            <span className="flex shrink-0 items-center gap-1.5 rounded-full bg-mint/25 px-3.5 py-1.5 font-display text-xs font-semibold text-mint-shade">
-              <CheckCircleIcon className="h-4 w-4" />
-              Synced
-            </span>
-          ) : (
-            <button
-              type="button"
-              onClick={() => setIsMoodleConnected(true)}
-              className="focus-ring shrink-0 rounded-full bg-clay px-4 py-2 font-display text-xs font-semibold text-white transition-colors hover:bg-clay-dark sm:text-sm"
-            >
-              Connect
-            </button>
-          )}
-        </div>
-      </div>
 
       <div className="mb-8">
         <GoogleCalendarSync />
