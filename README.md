@@ -305,7 +305,7 @@ The live demo is deployed on [Vercel](https://vercel.com), which builds and depl
 
 - **Paceful Problem Tree** — maps root causes (academic pressure, poor sleep, low activity, financial burden, social media, no combined visibility) through the core problem (students don't recognize overload until it's too late) to real effects (anxiety, depression, stress, declining performance). This directly shaped the decision to build a multi-category workload visualiser rather than a single-metric tracker.
 - **Paceful Idea Evolution Flowchart** — traces SkyLoad (weather-metaphor concept) → the pivot → Hazriq's room-based buddy concept → the merged concept → Paceful (final), alongside dropped ideas along the way (generic to-do list, standalone chatbot, 5-category model, manual category dropdown, fixed task deferral).
-- Full-resolution PDF of both diagrams: *[link]*
+- Full-resolution PDF of both diagrams: [Paceful Ideation Boards (PDF)](https://drive.google.com/file/d/1ZbnbyiiSrztw_Qm3whWrCjnED7CUaM09/view?usp=sharing)
 
 ---
 
