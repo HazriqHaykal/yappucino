@@ -119,30 +119,30 @@ AI-powered reasoning explains why a category is overloaded and actively helps st
 > Add screenshots to `docs/screenshots/` and update the image paths below.
 
 **Meet Your Buddy — Character Customisation**
-![Character Customisation](docs/screenshots/character-customisation.png)
+
 Students shape their companion before anything else happens in the app — choosing a form (Blob, Puff, Sprout, Cloud), a colour, and an optional accessory (Beanie, Glasses, Headphones), then naming it. This buddy later delivers every burnout check and nudge, making those messages feel personal rather than like system alerts.
 
 **Room Overview & Add Task**
-![Room Page](docs/screenshots/room-overview.png)
+
 A static illustrated space with four fixed zones: desk = Study/Work, dumbbell = Health, phone = People, chore basket = Chores. Workload is shown via the overall progress bar and per-category cards beneath the room. Tapping a zone opens a task modal to log a title, urgency, an effort-load slider, and an optional due date.
 
 **Buddy Check-in + Weekly Recap**
-![Buddy Check-in](docs/screenshots/buddy-checkin.png)
+
 Tapping the buddy triggers an on-demand burnout check — Gemini reasons over the student's actual tasks and responds via a warm speech bubble. The Weekly Recap does the same reasoning at a wider scale: a summary of the week just passed plus a light preview of what's coming.
 
 **Tasks Page & Nudge Detail**
-![Tasks Page](docs/screenshots/tasks-page.png)
+
 Opens with an AI insight banner summarizing the heaviest-loaded category and a suggested action. Below it, Google Calendar Sync auto-imports events as tasks with AI-inferred categories, priorities, and workload.
 
 - **Structure Nudge** (urgent tasks): Gemini breaks the task into concrete sub-steps (sticky-note list) so the student knows exactly what to do first.
 - **Rebalance Nudge** (non-urgent tasks): Gemini gives a personalized reason it's okay to defer, and tracks defer count so the tone gets gentler-but-firmer the more it's deferred.
 
 **Community Page**
-![Community Page](docs/screenshots/community-page.png)
+
 Shows anonymous, aggregate activity from nearby students (e.g. *"12 students studying around Faculty of Computing"*), paired with a real suggested nearby spot to recharge. Deliberately not a social network — no profiles, friend lists, or messaging.
 
 **Support Page**
-![Support Page](docs/screenshots/support-page.png)
+
 
 | Section | Description |
 |---|---|
