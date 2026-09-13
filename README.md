@@ -11,7 +11,7 @@ A student burnout companion that turns an abstract workload dashboard into a liv
 | **Team** | Yappucino |
 | **Team Members** | Hazriq Haykal Norrol Farhan · Siti Fatimah Binti Saniy Wong |
 | **University** | Universiti Putra Malaysia (UPM) |
-| **Video Presentation** | [Unlisted YouTube Link](#) |
+| **Video Presentation** | [Unlisted YouTube Link](https://youtu.be/8Rf3fniwnV4?si=cnXkaH1P0uOjxQVh) |
 | **Presentation Slides** | [Canva Deck](https://canva.link/pnrmpd5bksjfefa) |
 | **Live Demo** | [https://yappucino.vercel.app/](https://yappucino.vercel.app/) |
 | **Documentation** | [Google Doc](https://docs.google.com/document/d/1jt4oYdo5hziSTTLtOORDzLVZKF6z8mqce1zfVuYiabc/edit?usp=sharing) |
