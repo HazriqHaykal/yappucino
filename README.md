@@ -372,7 +372,7 @@ Encourages a healthier culture around student wellbeing by normalising breaks, r
 
 Based on feedback from the [mentor consultation](#mentor-consultation) and team discussion, the following improvements have been identified for the building phase.
 
-### Confirmed Enhancement Directions
+### Confirmed Enhancement Directions (Building Phase)
 
 - **AI Buddy:** Introduce text-to-speech for voice-based buddy responses
 - **Task Management:** Improve category mismatch detection and task input flow
