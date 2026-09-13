@@ -7,7 +7,7 @@ A student burnout companion that turns an abstract workload dashboard into a liv
 | | |
 |---|---|
 | **Hackathon** | Codenection 2026 |
-| **Problem Statement** | PS1 — Stress & Workload Manager |
+| **Problem Statement** | PS1 — Beating the Burnout, Stress & Workload Manager |
 | **Team** | Yappucino |
 | **Team Members** | Hazriq Haykal Norrol Farhan · Siti Fatimah Binti Saniy Wong |
 | **University** | Universiti Putra Malaysia (UPM) |
@@ -75,7 +75,7 @@ AI-powered reasoning explains why a category is overloaded and actively helps st
 
 ---
 
-## Key Features
+## Current Key Features
 
 - **Workload visualiser** across 4 life categories — tap a room zone to open that category, with live status cards and progress bars
 - **On-demand burnout check** with Gemini-generated reasoning, delivered via an in-room speech bubble
@@ -90,7 +90,7 @@ AI-powered reasoning explains why a category is overloaded and actively helps st
 
 ---
 
-## What Makes It Different
+## What Makes It Different (Current system)
 
 1. **Workload made visible at a glance, not buried in a report.** Each life category is paired with a status card and progress bar next to the student's room. The card state is directly derived from real task data, not decorative.
 2. **An AI insight banner that tells you what matters most, not just what's on your plate.** The Tasks page opens with a Gemini-generated summary of the heaviest-loaded category and a suggested next action.
